@@ -12,22 +12,18 @@ namespace HelloWorld;
 
 public class MultiplayAllocator : MatchmakerAllocator
 {
-    private const string EnvironmentId = "your_environment_id_here";
-    private const string ProjectId = "your_project_id_here";
     private const string FleetId = "your_fleet_id_here";
     private const string BuildConfigId = "your_build_config_id_here";
     private const string DefaultRegion = "your_default_region_here";
 
-    private const string ServiceAccountToken = "your_service_account_token_here";
-
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
-        var createAllocationUrl = $"https://multiplay.services.api.unity.com/v1/allocations/projects/{ProjectId}/environments/{EnvironmentId}/fleets/{FleetId}/allocations";
+        var createAllocationUrl = $"https://multiplay.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
         var region = request.MatchmakingResults.MatchProperties.TryGetValue("region", out var regionValue) ? regionValue.ToString() : DefaultRegion;
 
         using var client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ServiceAccountToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
 
         var content = new StringContent(JsonConvert.SerializeObject(new
         {
@@ -60,12 +56,12 @@ public class MultiplayAllocator : MatchmakerAllocator
     public override async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var allocationId = request.AllocationData["allocationId"].ToString();
-        var getAllocationsUrl = $"https://multiplay.services.api.unity.com/v1/allocations/projects/{ProjectId}/environments/{EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
+        var getAllocationsUrl = $"https://multiplay.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
 
         var allocationTime = DateTimeOffset.FromUnixTimeMilliseconds((long)request.AllocationData["startTime"]);
 
         using var client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ServiceAccountToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
 
         var allocation = await client.GetAsync(getAllocationsUrl);
 
