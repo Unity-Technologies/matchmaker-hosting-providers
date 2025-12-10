@@ -4,10 +4,7 @@ namespace Unity.Services.CloudCode.Apis.Matchmaker;
 
 public abstract class MatchmakerAllocator
 {
-    [CloudCodeFunction("Matchmaker_AllocateServer")]
     public abstract Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request);
-
-    [CloudCodeFunction("Matchmaker_PollAllocation")]
     public abstract Task<PollResponse> Poll(IExecutionContext context, PollRequest request);
 }
 

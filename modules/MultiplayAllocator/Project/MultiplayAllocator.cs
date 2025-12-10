@@ -20,6 +20,7 @@ public class MultiplayAllocator : MatchmakerAllocator
 
     private const string ServiceAccountToken = "your_service_account_token_here";
 
+    [CloudCodeFunction("Matchmaker_AllocateServer")]
     public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         var createAllocationUrl = $"https://multiplay.services.api.unity.com/v1/allocations/projects/{ProjectId}/environments/{EnvironmentId}/fleets/{FleetId}/allocations";
@@ -55,6 +56,7 @@ public class MultiplayAllocator : MatchmakerAllocator
         };
     }
 
+    [CloudCodeFunction("Matchmaker_PollAllocation")]
     public override async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var allocationId = request.AllocationData["allocationId"].ToString();
