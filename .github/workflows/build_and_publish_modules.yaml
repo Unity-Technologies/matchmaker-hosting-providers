@@ -4,6 +4,7 @@ on:
 
 jobs:
   build:
+    name: Build and Publish Module
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -13,8 +14,9 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
-      - run: dotnet publish modules/${{ matrix.module }}
-      - name: publish to release
+      - name: Build Module
+        run: dotnet publish modules/${{ matrix.module }}
+      - name: Publish to Release
         if: github.event_name == 'release'
         uses: svenstaro/upload-release-action@v2
         with:
