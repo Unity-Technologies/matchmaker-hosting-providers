@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Unity.Services.CloudCode.Apis.Matchmaker</AssemblyName>
+    <RootNamespace>Unity.Services.CloudCode.Apis.Matchmaker</RootNamespace>
+  </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Com.Unity.Services.CloudCode.Core" Version="0.0.1" />
+    </ItemGroup>
+
+</Project>

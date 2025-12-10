@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Project", "Project", "{EB1B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiplayAllocator", "Project\MultiplayAllocator.csproj", "{144F6259-C0FB-4006-867A-338BFBB715AA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchmakerCommon", "..\Com.Unity.Services.CloudCode.Apis.Matchmaker\MatchmakerCommon.csproj", "{5AA05417-AF62-448E-86DF-B68946D85BAB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,18 @@ Global
 		{144F6259-C0FB-4006-867A-338BFBB715AA}.Release|x64.Build.0 = Release|Any CPU
 		{144F6259-C0FB-4006-867A-338BFBB715AA}.Release|x86.ActiveCfg = Release|Any CPU
 		{144F6259-C0FB-4006-867A-338BFBB715AA}.Release|x86.Build.0 = Release|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Debug|x64.Build.0 = Debug|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Debug|x86.Build.0 = Debug|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Release|x64.ActiveCfg = Release|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Release|x64.Build.0 = Release|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Release|x86.ActiveCfg = Release|Any CPU
+		{5AA05417-AF62-448E-86DF-B68946D85BAB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
