@@ -23,7 +23,7 @@ public class MatchmakingResults
     /// Match properties containing player/team data and other match-specific configuration.
     /// Access player data like: request.MatchmakingResults.MatchProperties["teams"]
     /// </summary>
-    public object MatchProperties { get; set; }
+    public Dictionary<string, object> MatchProperties { get; set; }
     public string GeneratorName { get; set; }
     public string QueueName { get; set; }
     public string PoolName { get; set; }
