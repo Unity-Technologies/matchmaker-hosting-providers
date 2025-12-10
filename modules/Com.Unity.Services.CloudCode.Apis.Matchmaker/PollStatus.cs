@@ -1,4 +1,5 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Unity.Services.CloudCode.Apis.Matchmaker;
 
@@ -6,7 +7,7 @@ namespace Unity.Services.CloudCode.Apis.Matchmaker;
 /// Status values for Cloud Code poll responses.
 /// These values are returned by the Cloud Code poll function to indicate the current state of the allocation.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(StringEnumConverter))]
 public enum PollStatus
 {
     /// <summary>

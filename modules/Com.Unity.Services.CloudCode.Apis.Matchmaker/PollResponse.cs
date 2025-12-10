@@ -1,33 +1,6 @@
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-using System.Text.Json;
+
 
 namespace Unity.Services.CloudCode.Apis.Matchmaker;
-
-/// <summary>
-/// Assignment types available for Cloud Code responses.
-/// </summary>
-public enum AssignmentType
-{
-    /// <summary>
-    /// Modern IP/port-based assignment with CustomData support.
-    /// Use this for third-party providers (GameLift, Edgegap, etc.).
-    /// </summary>
-    IpPortAssignment,
-
-    /// <summary>
-    /// Escape hatch for entirely custom connections (no IP/port).
-    /// Use this when connection is handled entirely via CustomData.
-    /// </summary>
-    CustomAssignment,
-
-    /// <summary>
-    /// Backwards compatibility for existing Multiplay clients.
-    /// Use this when clients expect the legacy MultiplayAssignment format.
-    /// Note: Does NOT support CustomData.
-    /// </summary>
-    MultiplayAssignment,
-}
 
 /// <summary>
 /// Response payload from the Cloud Code poll function.
@@ -56,11 +29,9 @@ public class PollResponse
 /// Base class for Cloud Code assignment data.
 /// Use the appropriate derived class based on AssignmentType.
 /// </summary>
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
-[JsonDerivedType(typeof(IpPortAssignmentData), "IpPort")]
-[JsonDerivedType(typeof(CustomAssignmentData), "Custom")]
 public abstract class AssignmentData
 {
+    public abstract string Type { get; }
 }
 
 /// <summary>
@@ -69,6 +40,8 @@ public abstract class AssignmentData
 /// </summary>
 public class IpPortAssignmentData : AssignmentData
 {
+    public override string Type => "IpPort";
+
     /// <summary>
     /// Gets or sets the server IP address.
     /// </summary>
@@ -92,6 +65,8 @@ public class IpPortAssignmentData : AssignmentData
 /// </summary>
 public class CustomAssignmentData : AssignmentData
 {
+    public override string Type => "Custom";
+
     /// <summary>
     /// Gets or sets custom data to pass through to clients.
     /// This is the primary payload for custom connections.
