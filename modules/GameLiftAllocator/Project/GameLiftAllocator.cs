@@ -11,6 +11,7 @@ using Unity.Services.CloudCode.Apis;
 using Unity.Services.CloudCode.Core;
 using Unity.Services.CloudCode.Apis.Matchmaker;
 using IExecutionContext = Unity.Services.CloudCode.Core.IExecutionContext;
+using Microsoft.Extensions.Logging;
 
 namespace GameLiftAllocatorModule;
 
@@ -26,9 +27,8 @@ public class ModuleConfig : ICloudCodeSetup
     }
 }
 
-public class GameLiftAllocator : MatchmakerAllocator
+public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAllocator> logger) : MatchmakerAllocator
 {
-    private readonly IGameApiClient _gameApiClient;
 
     // Configuration - users should modify these constants for their setup
     private const string GameSessionQueueName = "MyQueue"; // TODO: Replace with actual queue name
@@ -50,11 +50,6 @@ public class GameLiftAllocator : MatchmakerAllocator
         ["asia-southeast"] = "ap-southeast-1"
     };
 
-    public GameLiftAllocator(IGameApiClient gameApiClient)
-    {
-        _gameApiClient = gameApiClient;
-    }
-
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
@@ -72,8 +67,8 @@ public class GameLiftAllocator : MatchmakerAllocator
         try
         {
             // Retrieve AWS credentials from Unity Secret Manager
-            var accessKeyId = await _gameApiClient.SecretManager.GetSecret(context, AwsAccessKeyIdSecretName);
-            var secretAccessKey = await _gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
+            var accessKeyId = await gameApiClient.SecretManager.GetSecret(context, AwsAccessKeyIdSecretName);
+            var secretAccessKey = await gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
 
             // Create GameLift client with credentials from secrets
             var credentials = new BasicAWSCredentials(accessKeyId.Value, secretAccessKey.Value);
@@ -112,6 +107,8 @@ public class GameLiftAllocator : MatchmakerAllocator
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Error starting game session placement");
+
             return new AllocateResponse
             {
                 Status = AllocateStatus.Error,
@@ -138,8 +135,8 @@ public class GameLiftAllocator : MatchmakerAllocator
         try
         {
             // Retrieve AWS credentials from Unity Secret Manager
-            var accessKeyId = await _gameApiClient.SecretManager.GetSecret(context, AwsAccessKeyIdSecretName);
-            var secretAccessKey = await _gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
+            var accessKeyId = await gameApiClient.SecretManager.GetSecret(context, AwsAccessKeyIdSecretName);
+            var secretAccessKey = await gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
 
             // Create GameLift client with credentials from secrets
             var credentials = new BasicAWSCredentials(accessKeyId.Value, secretAccessKey.Value);
@@ -196,6 +193,8 @@ public class GameLiftAllocator : MatchmakerAllocator
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Failed to describe game session placement");
+
             return new PollResponse
             {
                 Status = PollStatus.Error,

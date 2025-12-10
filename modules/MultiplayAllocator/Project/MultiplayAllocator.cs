@@ -8,10 +8,11 @@ using System.Net.Http.Headers;
 using System.Text;
 using System;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace MultiplayAllocator;
 
-public class MultiplayAllocator : MatchmakerAllocator
+public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : MatchmakerAllocator
 {
     private const string FleetId = "your_fleet_id";
     private const int BuildConfigId = 0;
@@ -26,42 +27,54 @@ public class MultiplayAllocator : MatchmakerAllocator
         using var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
 
-        var content = new StringContent(JsonSerializer.Serialize(new MultiplayAllocateRequest()
+        try
         {
-            AllocationId = Guid.NewGuid().ToString(),
-            BuildConfigurationId = BuildConfigId,
-            RegionId = region,
-            Payload = JsonSerializer.Serialize(request.MatchmakingResults)
-        }), Encoding.UTF8, "application/json");
+            var content = new StringContent(JsonSerializer.Serialize(new MultiplayAllocateRequest()
+            {
+                AllocationId = Guid.NewGuid().ToString(),
+                BuildConfigurationId = BuildConfigId,
+                RegionId = region,
+                Payload = JsonSerializer.Serialize(request.MatchmakingResults)
+            }), Encoding.UTF8, "application/json");
 
-        var response = await client.PostAsync(createAllocationUrl, content);
+            var response = await client.PostAsync(createAllocationUrl, content);
 
-        var responseContent = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-        {
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Error allocating Multiplay {error}", responseContent);
+
+                return new AllocateResponse
+                {
+                    Status = AllocateStatus.Error,
+                    Message = responseContent
+                };
+            }
+
+            var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocateResponse>(responseContent);
+
             return new AllocateResponse
             {
-                Status = AllocateStatus.Error,
+                Status = AllocateStatus.Created,
                 AllocationData = new Dictionary<string, object>
                 {
-                    { "error", responseContent }
+                    { "allocationId", multiplayAllocation.AllocationId },
+                    { "startTime", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() },
+                    { "matchId", request.MatchId },
+                    { "region", region }
                 }
             };
         }
-
-        var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocateResponse>(responseContent);
-
-        return new AllocateResponse
+        catch (Exception ex)
         {
-            Status = AllocateStatus.Created,
-            AllocationData = new Dictionary<string, object>
+            logger.LogError(ex, "Error allocating Multiplay");
+
+            return new AllocateResponse
             {
-                { "allocationId", multiplayAllocation.AllocationId },
-                { "startTime", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() },
-                { "matchId", request.MatchId },
-                { "region", region }
-            }
-        };
+                Status = AllocateStatus.Error,
+                Message = ex.Message
+            };
+        }
     }
 
     [CloudCodeFunction("Matchmaker_PollAllocation")]
@@ -73,29 +86,50 @@ public class MultiplayAllocator : MatchmakerAllocator
         using var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
 
-        var allocation = await client.GetAsync(getAllocationsUrl);
-
-        allocation.EnsureSuccessStatusCode();
-        var responseContent = await allocation.Content.ReadAsStringAsync();
-        var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocationStatus>(responseContent);
-
-        if (!string.IsNullOrEmpty(multiplayAllocation.Fulfilled))
+        try
         {
-            if (!multiplayAllocation.Readiness || !string.IsNullOrEmpty(multiplayAllocation.Ready))
+            var allocation = await client.GetAsync(getAllocationsUrl);
+
+            var responseContent = await allocation.Content.ReadAsStringAsync();
+            if (!allocation.IsSuccessStatusCode)
             {
-                if (!string.IsNullOrEmpty(multiplayAllocation.Ipv4) && multiplayAllocation.GamePort != 0)
+                return new PollResponse
                 {
-                    return new PollResponse
+                    Status = PollStatus.Error,
+                    Message = responseContent
+                };
+            }
+
+            var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocationStatus>(responseContent);
+
+            if (!string.IsNullOrEmpty(multiplayAllocation.Fulfilled))
+            {
+                if (!multiplayAllocation.Readiness || !string.IsNullOrEmpty(multiplayAllocation.Ready))
+                {
+                    if (!string.IsNullOrEmpty(multiplayAllocation.Ipv4) && multiplayAllocation.GamePort != 0)
                     {
-                        Status = PollStatus.Allocated,
-                        AssignmentData = new IpPortAssignmentData
+                        return new PollResponse
                         {
-                            Ip = multiplayAllocation.Ipv4,
-                            Port = multiplayAllocation.GamePort
-                        },
-                    };
+                            Status = PollStatus.Allocated,
+                            AssignmentData = new IpPortAssignmentData
+                            {
+                                Ip = multiplayAllocation.Ipv4,
+                                Port = multiplayAllocation.GamePort
+                            },
+                        };
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error polling Multiplay");
+
+            return new PollResponse
+            {
+                Status = PollStatus.Error,
+                Message = ex.Message
+            };
         }
 
         return new PollResponse
