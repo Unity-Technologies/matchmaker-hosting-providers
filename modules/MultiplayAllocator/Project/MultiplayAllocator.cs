@@ -13,9 +13,9 @@ namespace MultiplayAllocator;
 
 public class MultiplayAllocator : MatchmakerAllocator
 {
-    private const string FleetId = "9631d5fc-3423-4433-bede-bd6698234e76";
-    private const int BuildConfigId = 1077593;
-    private const string DefaultRegion = "bd984d6f-37a6-473d-a766-8944ae439526";
+    private const string FleetId = "your_fleet_id";
+    private const int BuildConfigId = 0;
+    private const string DefaultRegion = "your_default_region";
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
@@ -79,17 +79,23 @@ public class MultiplayAllocator : MatchmakerAllocator
         var responseContent = await allocation.Content.ReadAsStringAsync();
         var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocationStatus>(responseContent);
 
-        if (multiplayAllocation.Ready)
+        if (!string.IsNullOrEmpty(multiplayAllocation.Fulfilled))
         {
-            return new PollResponse
+            if (!multiplayAllocation.Readiness || !string.IsNullOrEmpty(multiplayAllocation.Ready))
             {
-                Status = PollStatus.Allocated,
-                AssignmentData = new IpPortAssignmentData
+                if (!string.IsNullOrEmpty(multiplayAllocation.Ipv4) && multiplayAllocation.GamePort != 0)
                 {
-                    Ip = multiplayAllocation.Ipv4,
-                    Port = multiplayAllocation.GamePort
-                },
-            };
+                    return new PollResponse
+                    {
+                        Status = PollStatus.Allocated,
+                        AssignmentData = new IpPortAssignmentData
+                        {
+                            Ip = multiplayAllocation.Ipv4,
+                            Port = multiplayAllocation.GamePort
+                        },
+                    };
+                }
+            }
         }
 
         return new PollResponse
@@ -122,8 +128,14 @@ class MultiplayAllocationStatus
     [JsonPropertyName("allocationId")]
     public string AllocationId { get; set; }
 
+    [JsonPropertyName("fulfilled")]
+    public string Fulfilled { get; set; }
+
+    [JsonPropertyName("readiness")]
+    public bool Readiness { get; set; }
+
     [JsonPropertyName("ready")]
-    public bool Ready { get; set; }
+    public string Ready { get; set; }
 
     [JsonPropertyName("ipv4")]
     public string Ipv4 { get; set; }
