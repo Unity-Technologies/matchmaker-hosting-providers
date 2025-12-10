@@ -10,5 +10,3 @@ public class MyModule
         return $"Hello, {name}!";
     }
 }
-
-

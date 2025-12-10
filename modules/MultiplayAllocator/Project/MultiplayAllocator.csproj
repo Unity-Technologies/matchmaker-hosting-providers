@@ -12,6 +12,10 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\Com.Unity.Services.CloudCode.Apis.Matchmaker\MatchmakerCommon.csproj" />
+    </ItemGroup>
+
     <PropertyGroup>
         <PublishReadyToRunComposite>true</PublishReadyToRunComposite>
     </PropertyGroup>
