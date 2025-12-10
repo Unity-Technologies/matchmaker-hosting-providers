@@ -9,7 +9,6 @@
   </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Com.Unity.Services.CloudCode.Apis" Version="0.0.21" />
       <PackageReference Include="Com.Unity.Services.CloudCode.Core" Version="0.0.1" />
     </ItemGroup>
 
