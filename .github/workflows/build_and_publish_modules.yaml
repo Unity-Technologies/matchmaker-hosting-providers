@@ -1,0 +1,25 @@
+on:
+  push:
+  release:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: ["GameLiftAllocator"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet publish modules/${{ matrix.module }}
+      - name: publish to release
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: modules/${{ matrix.module }}/*.ccm
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
