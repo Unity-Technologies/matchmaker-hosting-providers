@@ -13,15 +13,15 @@ namespace MultiplayAllocator;
 
 public class MultiplayAllocator : MatchmakerAllocator
 {
-    private const string FleetId = "0115aeef-51f5-4260-83f7-cd304d0c635d";
-    private const int BuildConfigId = 1136640;
+    private const string FleetId = "9631d5fc-3423-4433-bede-bd6698234e76";
+    private const int BuildConfigId = 1077593;
     private const string DefaultRegion = "bd984d6f-37a6-473d-a766-8944ae439526";
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         var createAllocationUrl = $"https://multiplay-stg.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
-        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString();
+        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegion;
 
         using var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
@@ -30,7 +30,7 @@ public class MultiplayAllocator : MatchmakerAllocator
         {
             AllocationId = Guid.NewGuid().ToString(),
             BuildConfigurationId = BuildConfigId,
-            RegionId = region ?? DefaultRegion,
+            RegionId = region,
             Payload = JsonSerializer.Serialize(request.MatchmakingResults)
         }), Encoding.UTF8, "application/json");
 
