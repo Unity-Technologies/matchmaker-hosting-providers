@@ -1,9 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace Unity.Services.CloudCode.Apis.Matchmaker;
 
 /// <summary>
 /// Status values for Cloud Code allocation responses.
 /// These values are returned by the Cloud Code allocate function to indicate the result of the allocation request.
 /// </summary>
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum AllocateStatus
 {
     /// <summary>
