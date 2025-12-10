@@ -1,4 +1,60 @@
+# Build outputs
 bin/
 obj/
 publish/
 *.ccm
+
+# .NET build outputs and dependencies
+*.dll
+*.exe
+*.pdb
+*.app
+*.so
+*.dylib
+*.cache
+*.mdb
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+*.code-workspace
+
+# Rider and JetBrains
+.idea/
+*.sln.iml
+
+# Build directories
+build/
+artifacts/
+
+# VS for Mac
+*.pidb
+*.userprefs
+
+# DotCover
+*.dotCover
+
+# Test results
+TestResults/
+*.nunit.xml
+
+# NuGet
+*.nupkg
+# Uncomment if NuGet packages should not be committed
+# packages/
+
+# Other common
+_ReSharper*/
+[Tt]humbs.db
+*.DS_Store
+*.TestDriven.Net.*
+*.ncrunch*
+*.nunittest*
+
+# Local configuration/environment
+env.local
