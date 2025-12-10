@@ -83,9 +83,7 @@ public class MultiplayAllocator : MatchmakerAllocator
     public override async Task<PollResponse> Poll(IExecutionContext context, IGameApiClient gameApiClient, PollRequest request)
     {
         var allocationId = request.AllocationData["allocationId"].ToString();
-        var getAllocationsUrl = $"https://multiplay.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
-
-        var allocationTime = DateTimeOffset.FromUnixTimeMilliseconds((long)request.AllocationData["startTime"]);
+        var getAllocationsUrl = $"https://multiplay-stg.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
 
         using var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
@@ -147,10 +145,4 @@ class MultiplayAllocationStatus
 
     [JsonPropertyName("gamePort")]
     public int GamePort { get; set; }
-
-    [JsonPropertyName("serverId")]
-    public string ServerId { get; set; }
-
-    [JsonPropertyName("regionId")]
-    public string RegionId { get; set; }
 }
