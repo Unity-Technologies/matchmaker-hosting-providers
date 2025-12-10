@@ -1,0 +1,6 @@
+{
+  "$schema": "https://ugs-config-schemas.unity3d.com/v1/remote-config.schema.json",
+  "entries": {
+    "string_key": "string_value"
+  }
+}
