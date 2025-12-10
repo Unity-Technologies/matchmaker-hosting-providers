@@ -14,13 +14,15 @@ jobs:
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "8.0.x"
-      - name: Build Module
-        run: dotnet publish modules/${{ matrix.module }}
-      - name: Publish to Release
+      - name: Publish Module
+        run: dotnet publish -c Release modules/${{ matrix.module }} -o publish
+      - name: Bundle Module Archive
+        run: zip -r ${{ matrix.module }}.ccm publish/*
+      - name: Publish to GH Release
         if: github.event_name == 'release'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: modules/${{ matrix.module }}/${{ matrix.module }}.ccm
+          file: ${{ matrix.module }}.ccm
           tag: ${{ github.ref }}
           overwrite: true

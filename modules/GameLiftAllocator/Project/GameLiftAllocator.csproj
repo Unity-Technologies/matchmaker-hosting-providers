@@ -15,8 +15,4 @@
     <PropertyGroup>
         <PublishReadyToRunComposite>true</PublishReadyToRunComposite>
     </PropertyGroup>
-
-    <Target Name="Zip" AfterTargets="Publish">
-        <Exec Command="zip -r $(SolutionDir)$(SolutionName).ccm $(PublishDir)" />
-    </Target>
 </Project>
