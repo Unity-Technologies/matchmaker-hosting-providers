@@ -18,13 +18,6 @@ public class MultiplayAllocator : MatchmakerAllocator
     private const int BuildConfigId = 1136640;
     private const string DefaultRegion = "bd984d6f-37a6-473d-a766-8944ae439526";
 
-    private ILogger<MultiplayAllocator> _logger;
-
-    public MultiplayAllocator(ILogger<MultiplayAllocator> logger)
-    {
-        _logger = logger;
-    }
-
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
