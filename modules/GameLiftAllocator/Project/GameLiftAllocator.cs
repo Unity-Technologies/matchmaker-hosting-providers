@@ -29,15 +29,15 @@ public class ModuleConfig : ICloudCodeSetup
 public class GameLiftAllocator : MatchmakerAllocator
 {
     // Configuration - users should modify these constants for their setup
-    private const string GameSessionQueueName = "your_queue_name_here";
+    private const string GameSessionQueueName = "MyQueue"; // TODO: Replace with actual queue name
     private const int DefaultMaximumPlayerSessionCount = 10;
-    private const string DefaultAwsRegion = "us-east-1";
+    private const string DefaultAwsRegion = "eu-west-2";
 
     // Secret names - these must match the secrets stored in Unity Dashboard
     private const string AwsAccessKeyIdSecretName = "AWS_ACCESS_KEY_ID";
     private const string AwsSecretAccessKeySecretName = "AWS_SECRET_ACCESS_KEY";
 
-    // Unity region to AWS region mapping
+    // Map the Unity regions to your AWS fleet regions. // TODO: Update this with Unity QoS actual regions
     private static readonly Dictionary<string, string> RegionMap = new()
     {
         ["us-east"] = "us-east-1",
