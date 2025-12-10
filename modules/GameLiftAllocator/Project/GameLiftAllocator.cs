@@ -28,16 +28,18 @@ public class ModuleConfig : ICloudCodeSetup
 
 public class GameLiftAllocator : MatchmakerAllocator
 {
+    private readonly IGameApiClient _gameApiClient;
+
     // Configuration - users should modify these constants for their setup
-    private const string GameSessionQueueName = "your_queue_name_here";
+    private const string GameSessionQueueName = "MyQueue"; // TODO: Replace with actual queue name
     private const int DefaultMaximumPlayerSessionCount = 10;
-    private const string DefaultAwsRegion = "us-east-1";
+    private const string DefaultAwsRegion = "eu-west-2";
 
     // Secret names - these must match the secrets stored in Unity Dashboard
     private const string AwsAccessKeyIdSecretName = "AWS_ACCESS_KEY_ID";
     private const string AwsSecretAccessKeySecretName = "AWS_SECRET_ACCESS_KEY";
 
-    // Unity region to AWS region mapping
+    // Map the Unity regions to your AWS fleet regions. // TODO: Update this with Unity QoS actual regions
     private static readonly Dictionary<string, string> RegionMap = new()
     {
         ["us-east"] = "us-east-1",
@@ -48,8 +50,13 @@ public class GameLiftAllocator : MatchmakerAllocator
         ["asia-southeast"] = "ap-southeast-1"
     };
 
+    public GameLiftAllocator(IGameApiClient gameApiClient)
+    {
+        _gameApiClient = gameApiClient;
+    }
+
     [CloudCodeFunction("Matchmaker_AllocateServer")]
-    public override async Task<AllocateResponse> Allocate(IExecutionContext context, IGameApiClient gameApiClient, AllocateRequest request)
+    public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         // Determine AWS region from match properties or use default
         var awsRegion = DefaultAwsRegion;
@@ -65,8 +72,8 @@ public class GameLiftAllocator : MatchmakerAllocator
         try
         {
             // Retrieve AWS credentials from Unity Secret Manager
-            var accessKeyId = await gameApiClient.SecretManager.GetSecret(context, AwsAccessKeyIdSecretName);
-            var secretAccessKey = await gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
+            var accessKeyId = await _gameApiClient.SecretManager.GetSecret(context, AwsAccessKeyIdSecretName);
+            var secretAccessKey = await _gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
 
             // Create GameLift client with credentials from secrets
             var credentials = new BasicAWSCredentials(accessKeyId.Value, secretAccessKey.Value);
@@ -114,7 +121,7 @@ public class GameLiftAllocator : MatchmakerAllocator
     }
 
     [CloudCodeFunction("Matchmaker_PollAllocation")]
-    public override async Task<PollResponse> Poll(IExecutionContext context, IGameApiClient gameApiClient, PollRequest request)
+    public override async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var placementId = request.AllocationData["placementId"]?.ToString();
         var awsRegion = request.AllocationData["awsRegion"]?.ToString() ?? DefaultAwsRegion;
@@ -131,8 +138,8 @@ public class GameLiftAllocator : MatchmakerAllocator
         try
         {
             // Retrieve AWS credentials from Unity Secret Manager
-            var accessKeyId = await gameApiClient.SecretManager.GetSecret(context, AwsAccessKeyIdSecretName);
-            var secretAccessKey = await gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
+            var accessKeyId = await _gameApiClient.SecretManager.GetSecret(context, AwsAccessKeyIdSecretName);
+            var secretAccessKey = await _gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
 
             // Create GameLift client with credentials from secrets
             var credentials = new BasicAWSCredentials(accessKeyId.Value, secretAccessKey.Value);

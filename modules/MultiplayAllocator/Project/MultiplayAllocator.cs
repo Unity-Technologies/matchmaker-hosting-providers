@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
-using Unity.Services.CloudCode.Apis;
 using Unity.Services.CloudCode.Core;
 using Unity.Services.CloudCode.Apis.Matchmaker;
 using System.Threading.Tasks;
@@ -9,22 +7,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System;
-using Microsoft.Extensions.Logging;
 using System.Text.Json.Serialization;
 
 namespace MultiplayAllocator;
-
-/// <summary>
-/// Module configuration for dependency injection.
-/// Registers IGameApiClient as a singleton for accessing Unity services.
-/// </summary>
-public class ModuleConfig : ICloudCodeSetup
-{
-    public void Setup(ICloudCodeConfig config)
-    {
-        config.Dependencies.AddSingleton(GameApiClient.Create());
-    }
-}
 
 public class MultiplayAllocator : MatchmakerAllocator
 {
@@ -33,7 +18,7 @@ public class MultiplayAllocator : MatchmakerAllocator
     private const string DefaultRegion = "bd984d6f-37a6-473d-a766-8944ae439526";
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
-    public override async Task<AllocateResponse> Allocate(IExecutionContext context, IGameApiClient gameApiClient, AllocateRequest request)
+    public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         var createAllocationUrl = $"https://multiplay-stg.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
         var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegion;
@@ -80,7 +65,7 @@ public class MultiplayAllocator : MatchmakerAllocator
     }
 
     [CloudCodeFunction("Matchmaker_PollAllocation")]
-    public override async Task<PollResponse> Poll(IExecutionContext context, IGameApiClient gameApiClient, PollRequest request)
+    public override async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var allocationId = request.AllocationData["allocationId"].ToString();
         var getAllocationsUrl = $"https://multiplay-stg.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
