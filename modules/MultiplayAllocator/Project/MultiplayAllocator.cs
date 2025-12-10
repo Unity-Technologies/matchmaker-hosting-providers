@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Unity.Services.CloudCode.Core;
 using Unity.Services.CloudCode.Apis.Matchmaker;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -25,7 +25,7 @@ public class MultiplayAllocator : MatchmakerAllocator
         using var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
 
-        var content = new StringContent(JsonConvert.SerializeObject(new
+        var content = new StringContent(JsonSerializer.Serialize(new
         {
             allocationId = FleetId,
             buildConfigurationId = BuildConfigId,
@@ -37,11 +37,11 @@ public class MultiplayAllocator : MatchmakerAllocator
 
         response.EnsureSuccessStatusCode();
         var responseContent = await response.Content.ReadAsStringAsync();
-        var multiplayAllocation = JsonConvert.DeserializeObject<MultiplayAllocateResponse>(responseContent);
+        var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocateResponse>(responseContent);
 
         return new AllocateResponse
         {
-            Status = "created",
+            Status = AllocateStatus.Created,
             AllocationData = new Dictionary<string, object>
             {
                 { "allocationId", multiplayAllocation.AllocationId },
@@ -67,56 +67,44 @@ public class MultiplayAllocator : MatchmakerAllocator
 
         allocation.EnsureSuccessStatusCode();
         var responseContent = await allocation.Content.ReadAsStringAsync();
-        var multiplayAllocation = JsonConvert.DeserializeObject<MultiplayAllocationStatus>(responseContent);
+        var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocationStatus>(responseContent);
 
         if (multiplayAllocation.Ready)
         {
             return new PollResponse
             {
-                Status = "allocated",
-                AssignmentType = "MultiplayAssignment",
-                Ip = multiplayAllocation.Ipv4,
-                Port = multiplayAllocation.GamePort,
-                CustomData = new Dictionary<string, object>
+                Status = PollStatus.Allocated,
+                AssignmentData = new IpPortAssignmentData
                 {
-                    { "serverId", multiplayAllocation.ServerId },
-                    { "regionId", multiplayAllocation.RegionId }
+                    Ip = multiplayAllocation.Ipv4,
+                    Port = multiplayAllocation.GamePort
                 },
-                AllocationCreatedTime = allocationTime
             };
         }
 
         return new PollResponse
         {
-            Status = "pending",
-            AllocationCreatedTime = allocationTime
+            Status = PollStatus.Pending,
         };
     }
 }
 
 class MultiplayAllocateResponse
 {
-    [JsonProperty("allocationId")]
     public string AllocationId { get; set; }
 }
 
 class MultiplayAllocationStatus
 {
-    [JsonProperty("allocationId")]
     public string AllocationId { get; set; }
 
-    [JsonProperty("ready")]
     public bool Ready { get; set; }
 
-    [JsonProperty("ipv4")]
     public string Ipv4 { get; set; }
 
-    [JsonProperty("gamePort")]
     public int GamePort { get; set; }
 
-    [JsonProperty("serverId")]
     public string ServerId { get; set; }
 
-    [JsonProperty("regionId")]
     public string RegionId { get; set; }
 }
