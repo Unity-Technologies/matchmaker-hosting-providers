@@ -17,11 +17,12 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : Matchmaker
     private const string FleetId = "your_fleet_id";
     private const int BuildConfigId = 0;
     private const string DefaultRegion = "your_default_region";
+    private const string MultiplayHost = "multiplay-stg.services.api.unity.com";
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
-        var createAllocationUrl = $"https://multiplay-stg.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
+        var createAllocationUrl = $"https://{MultiplayHost}/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
         var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegion;
 
         using var client = new HttpClient();
@@ -81,7 +82,7 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : Matchmaker
     public override async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var allocationId = request.AllocationData["allocationId"].ToString();
-        var getAllocationsUrl = $"https://multiplay-stg.services.api.unity.com/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
+        var getAllocationsUrl = $"https://{MultiplayHost}/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
 
         using var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
