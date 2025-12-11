@@ -1,3 +1,4 @@
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -13,10 +14,12 @@ public enum AllocateStatus
     /// <summary>
     /// Allocation job was created successfully. The matchmaker will begin polling for completion.
     /// </summary>
+    [EnumMember(Value = "created")]
     Created = 0,
 
     /// <summary>
     /// Allocation request failed. Check the Message property for details.
     /// </summary>
+    [EnumMember(Value = "error")]
     Error = 1,
 }

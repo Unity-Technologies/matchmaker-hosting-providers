@@ -1,5 +1,7 @@
 
 
+using Newtonsoft.Json;
+
 namespace Unity.Services.CloudCode.Apis.Matchmaker;
 
 /// <summary>
@@ -7,22 +9,30 @@ namespace Unity.Services.CloudCode.Apis.Matchmaker;
 /// </summary>
 public class PollResponse
 {
+    public PollResponse(PollStatus status)
+    {
+        Status = status;
+    }
+    
     /// <summary>
-    /// Gets or sets the current status of the allocation.
+    /// The current status of the allocation.
     /// </summary>
-    public PollStatus Status { get; set; }
+    [JsonProperty("status")]
+    public PollStatus Status { get; }
 
     /// <summary>
-    /// Gets or sets a human-readable message describing the current state.
+    /// A human-readable message describing the current state.
     /// Provides additional context for any status, especially useful for errors.
     /// </summary>
-    public string Message { get; set; }
+    [JsonProperty("message", NullValueHandling=NullValueHandling.Ignore)]
+    public string? Message { get; init; }
 
     /// <summary>
-    /// Gets or sets the assignment data containing connection details.
+    /// The assignment data containing connection details.
     /// Required when Status is Allocated.
     /// </summary>
-    public AssignmentData AssignmentData { get; set; }
+    [JsonProperty("assignmentData", NullValueHandling=NullValueHandling.Ignore)]
+    public AssignmentData? AssignmentData { get; init; }
 }
 
 /// <summary>
@@ -31,6 +41,7 @@ public class PollResponse
 /// </summary>
 public abstract class AssignmentData
 {
+    [JsonProperty("type")]
     public abstract string Type { get; }
 }
 
@@ -40,23 +51,26 @@ public abstract class AssignmentData
 /// </summary>
 public class IpPortAssignmentData : AssignmentData
 {
-    public override string Type => "IpPort";
+    public override string Type => "ipPort";
 
     /// <summary>
-    /// Gets or sets the server IP address.
+    /// The server IP address.
     /// </summary>
-    public string Ip { get; set; }
+    [JsonProperty("ip", NullValueHandling=NullValueHandling.Ignore)]
+    public string? Ip { get; init; }
 
     /// <summary>
-    /// Gets or sets the server port.
+    /// The server port.
     /// </summary>
-    public int Port { get; set; }
+    [JsonProperty("port", NullValueHandling=NullValueHandling.Ignore)]
+    public int? Port { get; init; }
 
     /// <summary>
-    /// Gets or sets custom data to pass through to clients.
+    /// Custom data to pass through to clients.
     /// Use this for auth tokens, session metadata, provider-specific extras, etc.
     /// </summary>
-    public Dictionary<string, object> CustomData { get; set; }
+    [JsonProperty("customData", NullValueHandling=NullValueHandling.Ignore)]
+    public Dictionary<string, object>? CustomData { get; init; }
 }
 
 /// <summary>
@@ -65,11 +79,12 @@ public class IpPortAssignmentData : AssignmentData
 /// </summary>
 public class CustomAssignmentData : AssignmentData
 {
-    public override string Type => "Custom";
+    public override string Type => "custom";
 
     /// <summary>
-    /// Gets or sets custom data to pass through to clients.
+    /// Custom data to pass through to clients.
     /// This is the primary payload for custom connections.
     /// </summary>
-    public Dictionary<string, object> CustomData { get; set; }
+    [JsonProperty("customData", NullValueHandling=NullValueHandling.Ignore)]
+    public Dictionary<string, object>? CustomData { get; init; }
 }

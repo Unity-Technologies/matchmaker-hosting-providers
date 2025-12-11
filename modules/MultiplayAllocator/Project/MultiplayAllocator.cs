@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MultiplayAllocator;
 
-public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : MatchmakerAllocator
+public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmakerAllocator
 {
     // Configuration - users should modify these constants for their setup
     private const string FleetId = "your_fleet_id";
@@ -23,7 +23,7 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : Matchmaker
     private const string MultiplayHost = "multiplay.services.api.unity.com";
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
-    public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
+    public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         var createAllocationUrl = $"https://{MultiplayHost}/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
         var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegion;
@@ -48,21 +48,19 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : Matchmaker
             {
                 logger.LogError("Error allocating Multiplay {error}", responseContent);
 
-                return new AllocateResponse
+                return new AllocateResponse(AllocateStatus.Error)
                 {
-                    Status = AllocateStatus.Error,
                     Message = responseContent
                 };
             }
 
             var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocateResponse>(responseContent);
 
-            return new AllocateResponse
+            return new AllocateResponse(AllocateStatus.Created)
             {
-                Status = AllocateStatus.Created,
                 AllocationData = new Dictionary<string, object>
                 {
-                    { "allocationId", multiplayAllocation.AllocationId },
+                    { "allocationId", multiplayAllocation?.AllocationId ?? string.Empty },
                     { "startTime", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() },
                     { "matchId", request.MatchId },
                     { "region", region }
@@ -73,16 +71,15 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : Matchmaker
         {
             logger.LogError(ex, "Error allocating Multiplay");
 
-            return new AllocateResponse
+            return new AllocateResponse(AllocateStatus.Error)
             {
-                Status = AllocateStatus.Error,
                 Message = ex.Message
             };
         }
     }
 
     [CloudCodeFunction("Matchmaker_PollAllocation")]
-    public override async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
+    public async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var allocationId = request.AllocationData["allocationId"].ToString();
         var getAllocationsUrl = $"https://{MultiplayHost}/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
@@ -97,24 +94,22 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : Matchmaker
             var responseContent = await allocation.Content.ReadAsStringAsync();
             if (!allocation.IsSuccessStatusCode)
             {
-                return new PollResponse
+                return new PollResponse(PollStatus.Error)
                 {
-                    Status = PollStatus.Error,
                     Message = responseContent
                 };
             }
 
             var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocationStatus>(responseContent);
 
-            if (!string.IsNullOrEmpty(multiplayAllocation.Fulfilled))
+            if (!string.IsNullOrEmpty(multiplayAllocation?.Fulfilled))
             {
                 if (!multiplayAllocation.Readiness || !string.IsNullOrEmpty(multiplayAllocation.Ready))
                 {
                     if (!string.IsNullOrEmpty(multiplayAllocation.Ipv4) && multiplayAllocation.GamePort != 0)
                     {
-                        return new PollResponse
+                        return new PollResponse(PollStatus.Allocated)
                         {
-                            Status = PollStatus.Allocated,
                             AssignmentData = new IpPortAssignmentData
                             {
                                 Ip = multiplayAllocation.Ipv4,
@@ -129,54 +124,50 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : Matchmaker
         {
             logger.LogError(ex, "Error polling Multiplay");
 
-            return new PollResponse
+            return new PollResponse(PollStatus.Error)
             {
-                Status = PollStatus.Error,
                 Message = ex.Message
             };
         }
 
-        return new PollResponse
-        {
-            Status = PollStatus.Pending,
-        };
+        return new PollResponse(PollStatus.Pending);
     }
 }
 
 class MultiplayAllocateRequest
 {
     [JsonPropertyName("allocationId")]
-    public string AllocationId { get; set; }
+    public string? AllocationId { get; set; }
     [JsonPropertyName("buildConfigurationId")]
     public int BuildConfigurationId { get; set; }
     [JsonPropertyName("regionId")]
-    public string RegionId { get; set; }
+    public string? RegionId { get; set; }
     [JsonPropertyName("payload")]
-    public string Payload { get; set; }
+    public string? Payload { get; set; }
 }
 
 class MultiplayAllocateResponse
 {
     [JsonPropertyName("allocationId")]
-    public string AllocationId { get; set; }
+    public string? AllocationId { get; set; }
 }
 
 class MultiplayAllocationStatus
 {
     [JsonPropertyName("allocationId")]
-    public string AllocationId { get; set; }
+    public string? AllocationId { get; set; }
 
     [JsonPropertyName("fulfilled")]
-    public string Fulfilled { get; set; }
+    public string? Fulfilled { get; set; }
 
     [JsonPropertyName("readiness")]
     public bool Readiness { get; set; }
 
     [JsonPropertyName("ready")]
-    public string Ready { get; set; }
+    public string? Ready { get; set; }
 
     [JsonPropertyName("ipv4")]
-    public string Ipv4 { get; set; }
+    public string? Ipv4 { get; set; }
 
     [JsonPropertyName("gamePort")]
     public int GamePort { get; set; }

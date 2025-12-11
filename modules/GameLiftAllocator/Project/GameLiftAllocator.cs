@@ -27,7 +27,7 @@ public class ModuleConfig : ICloudCodeSetup
     }
 }
 
-public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAllocator> logger) : MatchmakerAllocator
+public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAllocator> logger) : IMatchmakerAllocator
 {
 
     // Configuration - users should modify these constants for their setup
@@ -51,7 +51,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
     };
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
-    public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
+    public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         // Determine AWS region from match properties or use default
         var awsRegion = DefaultAwsRegion;
@@ -93,9 +93,8 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
             var response = await client.StartGameSessionPlacementAsync(placementRequest);
             var placement = response.GameSessionPlacement;
 
-            return new AllocateResponse
+            return new AllocateResponse(AllocateStatus.Created)
             {
-                Status = AllocateStatus.Created,
                 AllocationData = new Dictionary<string, object>
                 {
                     { "placementId", placement.PlacementId },
@@ -109,25 +108,23 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
         {
             logger.LogError(ex, "Error starting game session placement");
 
-            return new AllocateResponse
+            return new AllocateResponse(AllocateStatus.Error)
             {
-                Status = AllocateStatus.Error,
                 Message = $"Failed to start game session placement: {ex.Message}"
             };
         }
     }
 
     [CloudCodeFunction("Matchmaker_PollAllocation")]
-    public override async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
+    public async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var placementId = request.AllocationData["placementId"]?.ToString();
         var awsRegion = request.AllocationData["awsRegion"]?.ToString() ?? DefaultAwsRegion;
 
         if (string.IsNullOrEmpty(placementId))
         {
-            return new PollResponse
+            return new PollResponse(PollStatus.Error)
             {
-                Status = PollStatus.Error,
                 Message = "Missing placementId in allocation data"
             };
         }
@@ -156,37 +153,29 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
 
             return placement.Status.Value switch
             {
-                "PENDING" => new PollResponse
+                "PENDING" => new PollResponse(PollStatus.Pending),
+                "FULFILLED" => new PollResponse(PollStatus.Allocated)
                 {
-                    Status = PollStatus.Pending
-                },
-                "FULFILLED" => new PollResponse
-                {
-                    Status = PollStatus.Allocated,
                     AssignmentData = new IpPortAssignmentData
                     {
                         Ip = placement.IpAddress,
                         Port = placement.Port
                     }
                 },
-                "TIMED_OUT" => new PollResponse
+                "TIMED_OUT" => new PollResponse(PollStatus.Error)
                 {
-                    Status = PollStatus.Error,
                     Message = "Game session placement timed out"
                 },
-                "CANCELLED" => new PollResponse
+                "CANCELLED" => new PollResponse(PollStatus.Error)
                 {
-                    Status = PollStatus.Error,
                     Message = "Game session placement was cancelled"
                 },
-                "FAILED" => new PollResponse
+                "FAILED" => new PollResponse(PollStatus.Error)
                 {
-                    Status = PollStatus.Error,
                     Message = "Game session placement failed"
                 },
-                _ => new PollResponse
+                _ => new PollResponse(PollStatus.Error)
                 {
-                    Status = PollStatus.Error,
                     Message = $"Unknown placement status: {placement.Status.Value}"
                 }
             };
@@ -195,9 +184,8 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
         {
             logger.LogError(ex, "Failed to describe game session placement");
 
-            return new PollResponse
+            return new PollResponse(PollStatus.Error)
             {
-                Status = PollStatus.Error,
                 Message = $"Failed to describe game session placement: {ex.Message}"
             };
         }

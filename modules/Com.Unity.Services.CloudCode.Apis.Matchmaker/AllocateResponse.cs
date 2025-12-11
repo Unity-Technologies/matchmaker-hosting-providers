@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Unity.Services.CloudCode.Apis.Matchmaker;
 
@@ -7,21 +7,29 @@ namespace Unity.Services.CloudCode.Apis.Matchmaker;
 /// </summary>
 public class AllocateResponse
 {
+    public AllocateResponse(AllocateStatus status)
+    {
+        Status = status;
+    }
+    
     /// <summary>
-    /// Gets or sets the status of the allocation request.
+    /// The status of the allocation request.
     /// </summary>
-    public AllocateStatus Status { get; set; }
+    [JsonProperty("status")]
+    public AllocateStatus Status { get; }
 
     /// <summary>
-    /// Gets or sets a human-readable message describing the result.
+    /// A human-readable message describing the result.
     /// Provides additional context for any status, especially useful for errors.
     /// </summary>
-    public string Message { get; set; }
+    [JsonProperty("message", NullValueHandling=NullValueHandling.Ignore)]
+    public string? Message { get; init; }
 
     /// <summary>
-    /// Gets or sets allocation tracking data returned by the Cloud Code function.
+    /// Allocation tracking data returned by the Cloud Code function.
     /// This data will be passed back in subsequent poll requests.
     /// Developers should include any data needed to poll the allocation status (e.g., allocation ID, provider-specific tracking data).
     /// </summary>
-    public Dictionary<string, object> AllocationData { get; set; }
+    [JsonProperty("allocationData", NullValueHandling=NullValueHandling.Ignore)]
+    public Dictionary<string, object>? AllocationData { get; init; }
 }

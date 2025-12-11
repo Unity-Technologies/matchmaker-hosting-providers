@@ -1,3 +1,4 @@
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -13,15 +14,18 @@ public enum PollStatus
     /// <summary>
     /// Allocation is still in progress. The matchmaker will continue polling.
     /// </summary>
+    [EnumMember(Value = "pending")]
     Pending = 0,
 
     /// <summary>
     /// Server allocated successfully. Connection data is available.
     /// </summary>
+    [EnumMember(Value = "allocated")]
     Allocated = 1,
 
     /// <summary>
     /// Allocation failed. Check the Message property for details.
     /// </summary>
+    [EnumMember(Value = "error")]
     Error = 2,
 }
