@@ -14,10 +14,13 @@ namespace MultiplayAllocator;
 
 public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : MatchmakerAllocator
 {
+    // Configuration - users should modify these constants for their setup
     private const string FleetId = "your_fleet_id";
     private const int BuildConfigId = 0;
     private const string DefaultRegion = "your_default_region";
-    private const string MultiplayHost = "multiplay-stg.services.api.unity.com";
+
+    // Service constants
+    private const string MultiplayHost = "multiplay.services.api.unity.com";
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public override async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
