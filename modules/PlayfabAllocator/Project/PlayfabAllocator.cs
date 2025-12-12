@@ -27,6 +27,9 @@ public class ModuleConfig : ICloudCodeSetup
 
 public class PlayfabAllocator : IMatchmakerAllocator
 {
+    const string DeveloperSecretKey = "DEVELOPER_SECRET_KEY";
+    const string PlayfabBuildId = "PLAYFAB_BUILD_ID";
+    const string SecretKey = "TITLE_ID";
     static readonly Dictionary<string, string> RegionMap = new() { ["us-east"] = "EastUs" };
 
     readonly IGameApiClient _gameApiClient;
@@ -45,9 +48,12 @@ public class PlayfabAllocator : IMatchmakerAllocator
     [CloudCodeFunction(nameof(Allocate))]
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
-        ChangeThis();
+        var developerSecretKey = await _gameApiClient.SecretManager.GetSecret(context, DeveloperSecretKey);
+        var titleId = await _gameApiClient.SecretManager.GetSecret(context, SecretKey);
 
-        var playFabApiSettings = new PlayFabApiSettings { TitleId = "D3C5F" };
+        PlayFabSettings.staticSettings.DeveloperSecretKey = developerSecretKey.Value;
+        PlayFabSettings.staticSettings.TitleId = titleId.Value;
+        var playFabApiSettings = new PlayFabApiSettings { TitleId = titleId.Value };
 
         GetEntityTokenResponse tokenRequestResponse;
         try
@@ -90,9 +96,11 @@ public class PlayfabAllocator : IMatchmakerAllocator
                 return new AllocateResponse(AllocateStatus.Error) { Message = error };
             }
 
+            var buildId = await _gameApiClient.SecretManager.GetSecret(context, PlayfabBuildId);
+
             var multiplayerServerRequest = new RequestMultiplayerServerRequest
             {
-                BuildId          = ChangeThat(),
+                BuildId          = buildId.Value,
                 PreferredRegions = [preferredRegion],
                 SessionId        = request.MatchId
             };
@@ -130,17 +138,6 @@ public class PlayfabAllocator : IMatchmakerAllocator
     public Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         throw new NotImplementedException();
-    }
-
-    static void ChangeThis()
-    {
-        PlayFabSettings.staticSettings.DeveloperSecretKey = "G5KX8GQWP5II5XYWIHOEI753ZGPXSEFJR5HBS7AKA5ABPIAUW8";
-        PlayFabSettings.staticSettings.TitleId = "D3C5F";
-    }
-
-    static string ChangeThat()
-    {
-        return "b874afc8-358b-4b87-89c7-25a0e10742bf";
     }
 
     static string? GetPreferredRegion(AllocateRequest request)
