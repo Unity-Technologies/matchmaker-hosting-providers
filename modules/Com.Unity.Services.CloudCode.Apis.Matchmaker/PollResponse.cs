@@ -1,4 +1,6 @@
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Unity.Services.CloudCode.Apis.Matchmaker;
 
@@ -46,9 +48,9 @@ public class AssignmentData
     /// <param name="port">The port for the client to use.</param>
     /// <param name="customData">Additional data for the client.</param>
     /// <returns>An assignment data instance.</returns>
-    public static AssignmentData IpPort(string? ip, int? port, Dictionary<string, object>? customData = null)
+    public static AssignmentData IpPort(string ip, int port, Dictionary<string, object>? customData = null)
     {
-        return new AssignmentData("ipPort")
+        return new AssignmentData(AssignmentType.IpPort)
         {
             Ip = ip,
             Port = port,
@@ -63,19 +65,19 @@ public class AssignmentData
     /// <returns>An assignment data instance.</returns>
     public static AssignmentData Custom(Dictionary<string, object>? customData)
     {
-        return new AssignmentData("custom")
+        return new AssignmentData(AssignmentType.Custom)
         {
             CustomData = customData
         };
     }
 
-    private AssignmentData(string type)
+    private AssignmentData(AssignmentType type)
     {
         Type = type;
     }
 
     [JsonProperty("type")]
-    public string Type { get; }
+    public AssignmentType Type { get; }
 
     /// <summary>
     ///     The server IP address.
@@ -87,7 +89,7 @@ public class AssignmentData
     ///     The server port.
     /// </summary>
     [JsonProperty("port", NullValueHandling = NullValueHandling.Ignore)]
-    public int? Port { get; private init; }
+    public int Port { get; private init; }
 
     /// <summary>
     ///     Custom data to pass through to clients.
@@ -95,4 +97,22 @@ public class AssignmentData
     /// </summary>
     [JsonProperty("customData", NullValueHandling = NullValueHandling.Ignore)]
     public Dictionary<string, object>? CustomData { get; private init; }
+}
+
+/// <summary>
+/// Type of Assignment.
+/// </summary>
+[JsonConverter(typeof(StringEnumConverter))]
+public enum AssignmentType
+{
+    /// <summary>
+    /// An Ip and Port assignment.
+    /// </summary>
+    [EnumMember(Value = "ipPort")]
+    IpPort = 0,
+    /// <summary>
+    /// A custom assignment.
+    /// </summary>
+    [EnumMember(Value = "custom")]
+    Custom = 1
 }
