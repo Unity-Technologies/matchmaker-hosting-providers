@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PlayFab;
 using PlayFab.AuthenticationModels;
 using PlayFab.MultiplayerModels;
@@ -29,7 +30,7 @@ public class PlayfabAllocator : IMatchmakerAllocator
 {
     const string DeveloperSecretKey = "DEVELOPER_SECRET_KEY";
     const string PlayfabBuildId = "PLAYFAB_BUILD_ID";
-    const string SecretKey = "TITLE_ID";
+    const string PlayfabTitleId = "TITLE_ID";
     static readonly Dictionary<string, string> RegionMap = new() { ["us-east"] = "EastUs" };
 
     readonly IGameApiClient _gameApiClient;
@@ -48,12 +49,41 @@ public class PlayfabAllocator : IMatchmakerAllocator
     [CloudCodeFunction(nameof(Allocate))]
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
-        var developerSecretKey = await _gameApiClient.SecretManager.GetSecret(context, DeveloperSecretKey);
-        var titleId = await _gameApiClient.SecretManager.GetSecret(context, SecretKey);
+        try
+        {
+            PlayFabSettings.staticSettings.DeveloperSecretKey = (await _gameApiClient.SecretManager.GetSecret(context, DeveloperSecretKey)).Value;
+        }
+        catch (Exception e)
+        {
+            const string error = $"An error occured when retrieving secret for key '{DeveloperSecretKey}'.";
+            LogError(error, e);
+            return new AllocateResponse(AllocateStatus.Error) { Message = error };
+        }
 
-        PlayFabSettings.staticSettings.DeveloperSecretKey = developerSecretKey.Value;
-        PlayFabSettings.staticSettings.TitleId = titleId.Value;
-        var playFabApiSettings = new PlayFabApiSettings { TitleId = titleId.Value };
+        try
+        {
+            PlayFabSettings.staticSettings.TitleId = (await _gameApiClient.SecretManager.GetSecret(context, PlayfabTitleId)).Value;
+        }
+        catch (Exception e)
+        {
+            const string error = $"An error occured when retrieving secret for key '{PlayfabTitleId}'.";
+            LogError(error, e);
+            return new AllocateResponse(AllocateStatus.Error) { Message = error };
+        }
+
+        var playFabApiSettings = new PlayFabApiSettings { TitleId = PlayFabSettings.staticSettings.TitleId };
+
+        string? buildId;
+        try
+        {
+            buildId = (await _gameApiClient.SecretManager.GetSecret(context, PlayfabBuildId)).Value;
+        }
+        catch (Exception e)
+        {
+            const string error = $"An error occured when retrieving secret for key '{PlayfabBuildId}'.";
+            LogError(error, e);
+            return new AllocateResponse(AllocateStatus.Error) { Message = error };
+        }
 
         GetEntityTokenResponse tokenRequestResponse;
         try
@@ -72,7 +102,7 @@ public class PlayfabAllocator : IMatchmakerAllocator
         }
         catch (Exception e)
         {
-            var error = $"An error occured when retrieving the entity token. Error: {e.Message}";
+            const string error = "An error occured when retrieving the entity token.";
             LogError(error, e);
             return new AllocateResponse(AllocateStatus.Error) { Message = error };
         }
@@ -81,9 +111,9 @@ public class PlayfabAllocator : IMatchmakerAllocator
         {
             var authenticationContext = new PlayFabAuthenticationContext
             {
-                EntityId    = tokenRequestResponse.Entity.Id,
+                EntityId = tokenRequestResponse.Entity.Id,
                 EntityToken = tokenRequestResponse.EntityToken,
-                EntityType  = tokenRequestResponse.Entity.Type
+                EntityType = tokenRequestResponse.Entity.Type
             };
 
             var multiplayerInstanceApi = new PlayFabMultiplayerInstanceAPI(playFabApiSettings, authenticationContext);
@@ -91,18 +121,17 @@ public class PlayfabAllocator : IMatchmakerAllocator
             var preferredRegion = GetPreferredRegion(request);
             if (preferredRegion is null or "")
             {
-                const string error = "An error occured when retrieving the region in matchmaking properties. The region field must be present, non-null and non-empty.";
+                const string error =
+                    "An error occured when retrieving the region in matchmaking properties. The region field must be present, non-null and non-empty.";
                 LogError(error, null);
                 return new AllocateResponse(AllocateStatus.Error) { Message = error };
             }
 
-            var buildId = await _gameApiClient.SecretManager.GetSecret(context, PlayfabBuildId);
-
             var multiplayerServerRequest = new RequestMultiplayerServerRequest
             {
-                BuildId          = buildId.Value,
+                BuildId = buildId,
                 PreferredRegions = [preferredRegion],
-                SessionId        = request.MatchId
+                SessionId = request.MatchId
             };
 
             LogDebug($"Requesting an allocation for session id: {multiplayerServerRequest.SessionId}", null);
@@ -170,21 +199,22 @@ public class PlayfabAllocator : IMatchmakerAllocator
         {
             var authenticationContext = new PlayFabAuthenticationContext
             {
-                EntityId    = tokenRequestResponse.Entity.Id,
+                EntityId = tokenRequestResponse.Entity.Id,
                 EntityToken = tokenRequestResponse.EntityToken,
-                EntityType  = tokenRequestResponse.Entity.Type
+                EntityType = tokenRequestResponse.Entity.Type
             };
 
             var multiplayerInstanceApi = new PlayFabMultiplayerInstanceAPI(playFabApiSettings, authenticationContext);
 
             var multiplayerServerDetailsRequest = new GetMultiplayerServerDetailsRequest
             {
-                SessionId = request.AllocationData["sessionId"].ToString(),
+                SessionId = request.AllocationData["sessionId"].ToString()
             };
 
             LogDebug($"Requesting details for session id: {multiplayerServerDetailsRequest.SessionId}", null);
 
-            var detailsResult = await multiplayerInstanceApi.GetMultiplayerServerDetailsAsync(multiplayerServerDetailsRequest);
+            var detailsResult =
+                await multiplayerInstanceApi.GetMultiplayerServerDetailsAsync(multiplayerServerDetailsRequest);
 
             if (IsValid(detailsResult, out var errorMessage))
             {
@@ -200,7 +230,8 @@ public class PlayfabAllocator : IMatchmakerAllocator
                                 detailsResult.Result.Ports[0].Num)
                         };
                     default:
-                        var error = $"An error occured when polling the server status. Server state: {detailsResult.Result.State}";
+                        var error =
+                            $"An error occured when polling the server status. Server state: {detailsResult.Result.State}";
                         LogError(error, null);
                         return new PollResponse(PollStatus.Error) { Message = error };
                 }
@@ -261,7 +292,8 @@ public class PlayfabAllocator : IMatchmakerAllocator
         }
     }
 
-    static bool IsValid(PlayFabResult<RequestMultiplayerServerResponse> requestMultiplayerServerResult, out string errorMessage)
+    static bool IsValid(PlayFabResult<RequestMultiplayerServerResponse> requestMultiplayerServerResult,
+        out string errorMessage)
     {
         switch (requestMultiplayerServerResult)
         {
@@ -279,7 +311,8 @@ public class PlayfabAllocator : IMatchmakerAllocator
         }
     }
 
-    static bool IsValid(PlayFabResult<GetMultiplayerServerDetailsResponse> getMultiplayerServerDetailsResult, out string errorMessage)
+    static bool IsValid(PlayFabResult<GetMultiplayerServerDetailsResponse> getMultiplayerServerDetailsResult,
+        out string errorMessage)
     {
         switch (getMultiplayerServerDetailsResult)
         {
@@ -305,6 +338,6 @@ public class PlayfabAllocator : IMatchmakerAllocator
 
     static string SerializeToJson<T>(T obj)
     {
-        return Newtonsoft.Json.JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.Indented);
+        return JsonConvert.SerializeObject(obj, Formatting.Indented);
     }
 }
