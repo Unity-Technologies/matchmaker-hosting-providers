@@ -152,12 +152,11 @@ public class PlayfabAllocator : IMatchmakerAllocator
                 };
             }
 
-            LogError(errorMessage, null);
             return new AllocateResponse(AllocateStatus.Error) { Message = errorMessage };
         }
         catch (Exception e)
         {
-            var error = $"An error occured when allocating. Error: {e.Message}";
+            const string error = "An error occured when allocating.";
             LogError(error, e);
             return new AllocateResponse(AllocateStatus.Error) { Message = error };
         }
@@ -259,17 +258,19 @@ public class PlayfabAllocator : IMatchmakerAllocator
         return RegionMap.GetValueOrDefault(unityRegion);
     }
 
-    static bool IsValid(PlayFabResult<GetEntityTokenResponse> entityTokenRequestResult, out string errorMessage)
+    bool IsValid(PlayFabResult<GetEntityTokenResponse> entityTokenRequestResult, out string errorMessage)
     {
         switch (entityTokenRequestResult)
         {
             case null:
                 errorMessage =
                     $"An error occured when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}. The result is null.";
+                LogError(errorMessage, null);
                 return false;
             case { Error: not null }:
                 errorMessage =
-                    $"An error occured when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}. Error: {SerializeToJson(entityTokenRequestResult.Error)}.";
+                    $"An error occured when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}.";
+                LogError($"{errorMessage} Error: {SerializeToJson(entityTokenRequestResult.Error)}.", null);
                 return false;
             case
             {
@@ -287,7 +288,8 @@ public class PlayfabAllocator : IMatchmakerAllocator
                 return true;
             default:
                 errorMessage =
-                    $"An error occured when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}. Token is malformed. Token: {SerializeToJson(entityTokenRequestResult.Result)}.";
+                    $"An error occured when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}.";
+                LogError($"{errorMessage} Token is malformed. Token: {SerializeToJson(entityTokenRequestResult.Result)}.", null);
                 return false;
         }
     }
