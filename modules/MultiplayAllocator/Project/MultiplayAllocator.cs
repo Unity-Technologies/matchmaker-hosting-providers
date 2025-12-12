@@ -110,11 +110,7 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmake
                     {
                         return new PollResponse(PollStatus.Allocated)
                         {
-                            AssignmentData = new IpPortAssignmentData
-                            {
-                                Ip = multiplayAllocation.Ipv4,
-                                Port = multiplayAllocation.GamePort
-                            },
+                            AssignmentData = AssignmentData.IpPort(multiplayAllocation.Ipv4, multiplayAllocation.GamePort),
                         };
                     }
                 }

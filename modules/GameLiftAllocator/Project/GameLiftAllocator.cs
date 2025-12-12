@@ -156,11 +156,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
                 "PENDING" => new PollResponse(PollStatus.Pending),
                 "FULFILLED" => new PollResponse(PollStatus.Allocated)
                 {
-                    AssignmentData = new IpPortAssignmentData
-                    {
-                        Ip = placement.IpAddress,
-                        Port = placement.Port
-                    }
+                    AssignmentData = AssignmentData.IpPort(placement.IpAddress, placement.Port),
                 },
                 "TIMED_OUT" => new PollResponse(PollStatus.Error)
                 {

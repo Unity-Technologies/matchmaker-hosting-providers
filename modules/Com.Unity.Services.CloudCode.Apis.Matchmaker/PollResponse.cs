@@ -1,11 +1,9 @@
-
-
 using Newtonsoft.Json;
 
 namespace Unity.Services.CloudCode.Apis.Matchmaker;
 
 /// <summary>
-/// Response payload from the Cloud Code poll function.
+///     Response payload from the Cloud Code poll function.
 /// </summary>
 public class PollResponse
 {
@@ -13,78 +11,88 @@ public class PollResponse
     {
         Status = status;
     }
-    
+
     /// <summary>
-    /// The current status of the allocation.
+    ///     The current status of the allocation.
     /// </summary>
     [JsonProperty("status")]
     public PollStatus Status { get; }
 
     /// <summary>
-    /// A human-readable message describing the current state.
-    /// Provides additional context for any status, especially useful for errors.
+    ///     A human-readable message describing the current state.
+    ///     Provides additional context for any status, especially useful for errors.
     /// </summary>
-    [JsonProperty("message", NullValueHandling=NullValueHandling.Ignore)]
+    [JsonProperty("message", NullValueHandling = NullValueHandling.Ignore)]
     public string? Message { get; init; }
 
     /// <summary>
-    /// The assignment data containing connection details.
-    /// Required when Status is Allocated.
+    ///     The assignment data containing connection details.
+    ///     Required when Status is Allocated.
     /// </summary>
-    [JsonProperty("assignmentData", NullValueHandling=NullValueHandling.Ignore)]
+    [JsonProperty("assignmentData", NullValueHandling = NullValueHandling.Ignore)]
     public AssignmentData? AssignmentData { get; init; }
 }
 
 /// <summary>
-/// Base class for Cloud Code assignment data.
-/// Use the appropriate derived class based on AssignmentType.
+///     Base class for Cloud Code assignment data.
+///     Use the appropriate derived class based on AssignmentType.
 /// </summary>
-public abstract class AssignmentData
+public class AssignmentData
 {
+    /// <summary>
+    /// Create ip and port allocation assignment data.
+    /// </summary>
+    /// <param name="ip">The ip for the client to use.</param>
+    /// <param name="port">The port for the client to use.</param>
+    /// <param name="customData">Additional data for the client.</param>
+    /// <returns>An assignment data instance.</returns>
+    public static AssignmentData IpPort(string? ip, int? port, Dictionary<string, object>? customData = null)
+    {
+        return new AssignmentData("ipPort")
+        {
+            Ip = ip,
+            Port = port,
+            CustomData = customData
+        };
+    }
+
+    /// <summary>
+    /// Create custom allocation assignment data.
+    /// </summary>
+    /// <param name="customData">Additional data for the client.</param>
+    /// <returns>An assignment data instance.</returns>
+    public static AssignmentData Custom(Dictionary<string, object>? customData)
+    {
+        return new AssignmentData("custom")
+        {
+            CustomData = customData
+        };
+    }
+
+    private AssignmentData(string type)
+    {
+        Type = type;
+    }
+
     [JsonProperty("type")]
-    public abstract string Type { get; }
-}
-
-/// <summary>
-/// Assignment data for IpPortAssignment type.
-/// Use this for modern third-party provider integrations.
-/// </summary>
-public class IpPortAssignmentData : AssignmentData
-{
-    public override string Type => "ipPort";
+    public string Type { get; }
 
     /// <summary>
-    /// The server IP address.
+    ///     The server IP address.
     /// </summary>
-    [JsonProperty("ip", NullValueHandling=NullValueHandling.Ignore)]
-    public string? Ip { get; init; }
+    [JsonProperty("ip", NullValueHandling = NullValueHandling.Ignore)]
+    public string? Ip { get; private init; }
 
     /// <summary>
-    /// The server port.
+    ///     The server port.
     /// </summary>
-    [JsonProperty("port", NullValueHandling=NullValueHandling.Ignore)]
-    public int? Port { get; init; }
+    [JsonProperty("port", NullValueHandling = NullValueHandling.Ignore)]
+    public int? Port { get; private init; }
 
     /// <summary>
-    /// Custom data to pass through to clients.
-    /// Use this for auth tokens, session metadata, provider-specific extras, etc.
+    ///     Custom data to pass through to clients.
+    ///     Use this for auth tokens, session metadata, provider-specific extras, etc.
     /// </summary>
-    [JsonProperty("customData", NullValueHandling=NullValueHandling.Ignore)]
-    public Dictionary<string, object>? CustomData { get; init; }
-}
-
-/// <summary>
-/// Assignment data for CustomAssignment type.
-/// Use this when connection is entirely custom (no IP/port).
-/// </summary>
-public class CustomAssignmentData : AssignmentData
-{
-    public override string Type => "custom";
-
-    /// <summary>
-    /// Custom data to pass through to clients.
-    /// This is the primary payload for custom connections.
-    /// </summary>
-    [JsonProperty("customData", NullValueHandling=NullValueHandling.Ignore)]
-    public Dictionary<string, object>? CustomData { get; init; }
+    [JsonProperty("customData", NullValueHandling = NullValueHandling.Ignore)]
+    public Dictionary<string, object>? CustomData { get; private init; }
 }
