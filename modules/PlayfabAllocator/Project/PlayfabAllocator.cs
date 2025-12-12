@@ -39,7 +39,6 @@ public class PlayfabAllocator : IMatchmakerAllocator
     readonly Action<string, Exception?> LogDebug;
     readonly Action<string, Exception?> LogError;
 
-
     public PlayfabAllocator(IGameApiClient gameApiClient, ILogger<PlayfabAllocator> logger)
     {
         _gameApiClient = gameApiClient;
@@ -242,6 +241,7 @@ public class PlayfabAllocator : IMatchmakerAllocator
             {
                 case "StandingBy":
                     return new PollResponse(PollStatus.Pending);
+                case "Active":
                 case "Allocated":
                     return new PollResponse(PollStatus.Allocated)
                     {
