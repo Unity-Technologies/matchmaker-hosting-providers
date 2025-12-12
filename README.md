@@ -8,6 +8,9 @@ A collection of examples to connect Unity Matchmaker with various game server ho
 - [UGS CLI](https://services.docs.unity.com/guides/ugs-cli/latest/general/get-started/install-the-cli/)
   - [Setup Project and Environment](https://services.docs.unity.com/guides/ugs-cli/latest/general/get-started/setup-a-common-configuration/)
   - [Authenticate](https://services.docs.unity.com/guides/ugs-cli/latest/general/get-started/get-authenticated/)
+  - Make sure that your service account has the following project permissions:
+    - `Unity Environments Viewer`
+    - `Cloud Code Editor`
 
 # Getting Started
 
