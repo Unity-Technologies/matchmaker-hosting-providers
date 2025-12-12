@@ -135,9 +135,86 @@ public class PlayfabAllocator : IMatchmakerAllocator
     }
 
     [CloudCodeFunction(nameof(Poll))]
-    public Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
+    public async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
-        throw new NotImplementedException();
+        var developerSecretKey = await _gameApiClient.SecretManager.GetSecret(context, DeveloperSecretKey);
+        var titleId = await _gameApiClient.SecretManager.GetSecret(context, SecretKey);
+
+        PlayFabSettings.staticSettings.DeveloperSecretKey = developerSecretKey.Value;
+        PlayFabSettings.staticSettings.TitleId = titleId.Value;
+        var playFabApiSettings = new PlayFabApiSettings { TitleId = titleId.Value };
+
+        GetEntityTokenResponse tokenRequestResponse;
+        try
+        {
+            var entityTokenRequest = new GetEntityTokenRequest();
+            var entityTokenRequestResult =
+                await PlayFabAuthenticationAPI.GetEntityTokenAsync(entityTokenRequest, playFabApiSettings);
+
+            if (!IsValid(entityTokenRequestResult, out var errorMessage))
+            {
+                LogError(errorMessage, null);
+                return new PollResponse(PollStatus.Error) { Message = errorMessage };
+            }
+
+            tokenRequestResponse = entityTokenRequestResult.Result;
+        }
+        catch (Exception e)
+        {
+            var error = $"An error occured when retrieving the entity token. Error: {e.Message}";
+            LogError(error, e);
+            return new PollResponse(PollStatus.Error) { Message = error };
+        }
+
+        try
+        {
+            var authenticationContext = new PlayFabAuthenticationContext
+            {
+                EntityId    = tokenRequestResponse.Entity.Id,
+                EntityToken = tokenRequestResponse.EntityToken,
+                EntityType  = tokenRequestResponse.Entity.Type
+            };
+
+            var multiplayerInstanceApi = new PlayFabMultiplayerInstanceAPI(playFabApiSettings, authenticationContext);
+
+            var multiplayerServerDetailsRequest = new GetMultiplayerServerDetailsRequest
+            {
+                SessionId = request.AllocationData["sessionId"].ToString(),
+            };
+
+            LogDebug($"Requesting details for session id: {multiplayerServerDetailsRequest.SessionId}", null);
+
+            var detailsResult = await multiplayerInstanceApi.GetMultiplayerServerDetailsAsync(multiplayerServerDetailsRequest);
+
+            if (IsValid(detailsResult, out var errorMessage))
+            {
+                switch (detailsResult.Result.State)
+                {
+                    case "StandingBy":
+                        return new PollResponse(PollStatus.Pending);
+                    case "Allocated":
+                        return new PollResponse(PollStatus.Allocated)
+                        {
+                            AssignmentData = AssignmentData.IpPort(
+                                detailsResult.Result.IPV4Address,
+                                detailsResult.Result.Ports[0].Num)
+                        };
+                    default:
+                        var error = $"An error occured when polling the server status. Server state: {detailsResult.Result.State}";
+                        LogError(error, null);
+                        return new PollResponse(PollStatus.Error) { Message = error };
+                }
+            }
+
+            LogError(errorMessage, null);
+            return new PollResponse(PollStatus.Error) { Message = errorMessage };
+        }
+        catch (Exception e)
+        {
+            var error = $"An error occured when polling the server status. Error: {e.Message}";
+            LogError(error, e);
+            return new PollResponse(PollStatus.Error) { Message = error };
+        }
     }
 
     static string? GetPreferredRegion(AllocateRequest request)
@@ -184,9 +261,9 @@ public class PlayfabAllocator : IMatchmakerAllocator
         }
     }
 
-    static bool IsValid(PlayFabResult<RequestMultiplayerServerResponse> entityTokenRequestResult, out string errorMessage)
+    static bool IsValid(PlayFabResult<RequestMultiplayerServerResponse> requestMultiplayerServerResult, out string errorMessage)
     {
-        switch (entityTokenRequestResult)
+        switch (requestMultiplayerServerResult)
         {
             case null:
                 errorMessage =
@@ -194,11 +271,35 @@ public class PlayfabAllocator : IMatchmakerAllocator
                 return false;
             case { Error: not null }:
                 errorMessage =
-                    $"An error occured when calling {nameof(PlayFabMultiplayerInstanceAPI.RequestMultiplayerServerAsync)}. Error: {SerializeToJson(entityTokenRequestResult.Error)}.";
+                    $"An error occured when calling {nameof(PlayFabMultiplayerInstanceAPI.RequestMultiplayerServerAsync)}. Error: {SerializeToJson(requestMultiplayerServerResult.Error)}.";
                 return false;
             default:
                 errorMessage = string.Empty;
                 return true;
+        }
+    }
+
+    static bool IsValid(PlayFabResult<GetMultiplayerServerDetailsResponse> getMultiplayerServerDetailsResult, out string errorMessage)
+    {
+        switch (getMultiplayerServerDetailsResult)
+        {
+            case null:
+                errorMessage =
+                    $"An error occured when calling {nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync)}. The result is null.";
+                return false;
+            case { Error: not null }:
+                errorMessage =
+                    $"An error occured when calling {nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync)}. Error: {SerializeToJson(getMultiplayerServerDetailsResult.Error)}.";
+                return false;
+            case { Result: { State.Length: > 0, IPV4Address.Length: > 0, Ports.Count: > 0 } }:
+            {
+                errorMessage = string.Empty;
+                return true;
+            }
+            default:
+                errorMessage =
+                    $"An error occured when calling {nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync)}. Details are malformed. Details: {SerializeToJson(getMultiplayerServerDetailsResult.Result)}.";
+                return false;
         }
     }
 
