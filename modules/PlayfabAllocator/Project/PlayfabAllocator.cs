@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -33,7 +32,6 @@ public class PlayfabAllocator : IMatchmakerAllocator
     readonly IGameApiClient _gameApiClient;
     readonly Action<string, Exception?> LogDebug;
     readonly Action<string, Exception?> LogError;
-    readonly JsonSerializerOptions _jsonSerializerOptions;
 
     public PlayfabAllocator(IGameApiClient gameApiClient, ILogger<PlayfabAllocator> logger)
     {
@@ -42,10 +40,6 @@ public class PlayfabAllocator : IMatchmakerAllocator
             LoggerMessage.Define<string>(LogLevel.Error, new EventId(), "{ErrorMessage}")(logger, message, exception);
         LogDebug = (message, exception) =>
             LoggerMessage.Define<string>(LogLevel.Debug, new EventId(), "{DebugMessage}")(logger, message, exception);
-        _jsonSerializerOptions = new JsonSerializerOptions
-        {
-            WriteIndented = true
-        };
     }
 
     [CloudCodeFunction(nameof(Allocate))]
@@ -68,26 +62,6 @@ public class PlayfabAllocator : IMatchmakerAllocator
                 return new AllocateResponse(AllocateStatus.Error) { Message = errorMessage };
             }
 
-            // if (entityTokenRequestResult is not { Error: null })
-            // {
-            //     var error =
-            //         $"An error occured when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}. Error {entityTokenRequestResult?.Error.ErrorMessage}";
-            //
-            //     LogError(error, null);
-            //
-            //     return new AllocateResponse(AllocateStatus.Error) { Message = error };
-            // }
-            //
-            // if (!IsTokenResultValid(entityTokenRequestResult))
-            // {
-            //     var error =
-            //         $"An error occured when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}. Token: {SerializeToJson(entityTokenRequestResult.Result)}.";
-            //
-            //     LogError(error, null);
-            //
-            //     return new AllocateResponse(AllocateStatus.Error) { Message = error };
-            // }
-
             tokenRequestResponse = entityTokenRequestResult.Result;
         }
         catch (Exception e)
@@ -108,10 +82,18 @@ public class PlayfabAllocator : IMatchmakerAllocator
 
             var multiplayerInstanceApi = new PlayFabMultiplayerInstanceAPI(playFabApiSettings, authenticationContext);
 
+            var preferredRegion = GetPreferredRegion(request);
+            if (preferredRegion is null or "")
+            {
+                const string error = "An error occured when retrieving the region in matchmaking properties. The region field must be present, non-null and non-empty.";
+                LogError(error, null);
+                return new AllocateResponse(AllocateStatus.Error) { Message = error };
+            }
+
             var multiplayerServerRequest = new RequestMultiplayerServerRequest
             {
                 BuildId          = ChangeThat(),
-                PreferredRegions = [GetPreferredRegion(request)],
+                PreferredRegions = [preferredRegion],
                 SessionId        = request.MatchId
             };
 
@@ -135,16 +117,6 @@ public class PlayfabAllocator : IMatchmakerAllocator
 
             LogError(errorMessage, null);
             return new AllocateResponse(AllocateStatus.Error) { Message = errorMessage };
-
-            // if (allocationResult is not { Error: null })
-            // {
-            //     var error =
-            //         $"An error occured when calling {nameof(multiplayerInstanceApi.RequestMultiplayerServerAsync)}. Error {allocationResult?.Error.ErrorMessage}";
-            //
-            //     LogError(error, null);
-            //
-            //     return new AllocateResponse(AllocateStatus.Error) { Message = error };
-            // }
         }
         catch (Exception e)
         {
@@ -173,7 +145,7 @@ public class PlayfabAllocator : IMatchmakerAllocator
 
     static string? GetPreferredRegion(AllocateRequest request)
     {
-        if (!request.MatchmakingResults.MatchProperties.TryGetValue("region", out var regionValue))
+        if (!request.MatchmakingResults.MatchProperties.TryGetValue("Region", out var regionValue))
         {
             return null;
         }
@@ -182,20 +154,7 @@ public class PlayfabAllocator : IMatchmakerAllocator
         return RegionMap.GetValueOrDefault(unityRegion);
     }
 
-    static bool IsTokenResultValid(PlayFabResult<GetEntityTokenResponse> entityTokenRequestResult)
-    {
-        return entityTokenRequestResult.Result is
-        {
-            EntityToken: not null and not "",
-            Entity:
-            {
-                Id: not null and not "",
-                Type: not null and not ""
-            }
-        };
-    }
-
-    bool IsValid(PlayFabResult<GetEntityTokenResponse> entityTokenRequestResult, out string errorMessage)
+    static bool IsValid(PlayFabResult<GetEntityTokenResponse> entityTokenRequestResult, out string errorMessage)
     {
         switch (entityTokenRequestResult)
         {
@@ -228,7 +187,7 @@ public class PlayfabAllocator : IMatchmakerAllocator
         }
     }
 
-    bool IsValid(PlayFabResult<RequestMultiplayerServerResponse> entityTokenRequestResult, out string errorMessage)
+    static bool IsValid(PlayFabResult<RequestMultiplayerServerResponse> entityTokenRequestResult, out string errorMessage)
     {
         switch (entityTokenRequestResult)
         {
@@ -246,8 +205,8 @@ public class PlayfabAllocator : IMatchmakerAllocator
         }
     }
 
-    string SerializeToJson<T>(T obj)
+    static string SerializeToJson<T>(T obj)
     {
-        return JsonSerializer.Serialize(obj, options: _jsonSerializerOptions);
+        return Newtonsoft.Json.JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.Indented);
     }
 }
