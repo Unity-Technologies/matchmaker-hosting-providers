@@ -3,5 +3,5 @@
   <Project Path="modules/Com.Unity.Services.CloudCode.Apis.Matchmaker/MatchmakerCommon.csproj" />
   <Project Path="modules/GameLiftAllocator/Project/GameLiftAllocator.csproj" />
   <Project Path="modules/MultiplayAllocator/Project/MultiplayAllocator.csproj" />
-  <Project Path="modules/PlayfabAllocator/Project/PlayfabAllocator.csproj" />
+  <Project Path="modules/PlayfabAllocator/Project/PlayFabAllocator.csproj" />
 </Solution>
