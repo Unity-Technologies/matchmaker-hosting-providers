@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: ["GameLiftAllocator", "MultiplayAllocator", "PlayfabAllocator"]
+        module: ["GameLiftAllocator", "MultiplayAllocator", "PlayFabAllocator"]
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5

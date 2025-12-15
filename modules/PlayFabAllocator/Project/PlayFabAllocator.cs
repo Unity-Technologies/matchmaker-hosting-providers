@@ -11,7 +11,7 @@ using Unity.Services.CloudCode.Apis;
 using Unity.Services.CloudCode.Apis.Matchmaker;
 using Unity.Services.CloudCode.Core;
 
-namespace PlayfabAllocatorModule;
+namespace PlayFabAllocatorModule;
 
 /// <summary>
 /// Module configuration for dependency injection.
@@ -26,7 +26,7 @@ public class ModuleConfig : ICloudCodeSetup
     }
 }
 
-public class PlayfabAllocator : IMatchmakerAllocator
+public class PlayFabAllocator : IMatchmakerAllocator
 {
     const string AllocationUserFriendlyError = "An error occured when allocating.";
     const string PollUserFriendlyError = "An error occured when polling the server status.";
@@ -44,14 +44,14 @@ public class PlayfabAllocator : IMatchmakerAllocator
     /// href="https://cloud.unity.com">Unity Dashboard</a> with the
     /// <c>PLAYFAB_BUILD_ID</c> key containing your PlayFab Build Id.
     /// </summary>
-    const string PlayfabBuildId = "PLAYFAB_BUILD_ID";
+    const string PlayFabBuildId = "PLAYFAB_BUILD_ID";
 
     /// <summary>
     /// You will need to set up a secret in the <a
     /// href="https://cloud.unity.com">Unity Dashboard</a> with
     /// the <c>TITLE_ID</c> key containing your PlayFab Title Id.
     /// </summary>
-    const string PlayfabTitleId = "TITLE_ID";
+    const string PlayFabTitleId = "TITLE_ID";
 
     static readonly Dictionary<string, string> RegionMap = new()
     {
@@ -66,7 +66,7 @@ public class PlayfabAllocator : IMatchmakerAllocator
     readonly Action<string, Exception?> LogDebug;
     readonly Action<string, Exception?> LogError;
 
-    public PlayfabAllocator(IGameApiClient gameApiClient, ILogger<PlayfabAllocator> logger)
+    public PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAllocator> logger)
     {
         _gameApiClient = gameApiClient;
         LogError = (message, exception) =>
@@ -91,11 +91,11 @@ public class PlayfabAllocator : IMatchmakerAllocator
 
         try
         {
-            PlayFabSettings.staticSettings.TitleId = (await _gameApiClient.SecretManager.GetSecret(context, PlayfabTitleId)).Value;
+            PlayFabSettings.staticSettings.TitleId = (await _gameApiClient.SecretManager.GetSecret(context, PlayFabTitleId)).Value;
         }
         catch (Exception e)
         {
-            const string error = $"An error occured when retrieving secret for key '{PlayfabTitleId}'.";
+            const string error = $"An error occured when retrieving secret for key '{PlayFabTitleId}'.";
             LogError(error, e);
             return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
         }
@@ -105,11 +105,11 @@ public class PlayfabAllocator : IMatchmakerAllocator
         string? buildId;
         try
         {
-            buildId = (await _gameApiClient.SecretManager.GetSecret(context, PlayfabBuildId)).Value;
+            buildId = (await _gameApiClient.SecretManager.GetSecret(context, PlayFabBuildId)).Value;
         }
         catch (Exception e)
         {
-            const string error = $"An error occured when retrieving secret for key '{PlayfabBuildId}'.";
+            const string error = $"An error occured when retrieving secret for key '{PlayFabBuildId}'.";
             LogError(error, e);
             return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
         }
@@ -206,11 +206,11 @@ public class PlayfabAllocator : IMatchmakerAllocator
 
         try
         {
-            PlayFabSettings.staticSettings.TitleId = (await _gameApiClient.SecretManager.GetSecret(context, PlayfabTitleId)).Value;
+            PlayFabSettings.staticSettings.TitleId = (await _gameApiClient.SecretManager.GetSecret(context, PlayFabTitleId)).Value;
         }
         catch (Exception e)
         {
-            const string error = $"An error occured when retrieving secret for key '{PlayfabTitleId}'.";
+            const string error = $"An error occured when retrieving secret for key '{PlayFabTitleId}'.";
             LogError(error, e);
             return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
         }
