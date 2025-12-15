@@ -24,12 +24,12 @@ public class ModuleConfig : ICloudCodeSetup
     public void Setup(ICloudCodeConfig config)
     {
         config.Dependencies.AddSingleton(GameApiClient.Create());
+        config.Dependencies.AddScoped<IGameLiftFactory, GameLiftFactory>();
     }
 }
 
-public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAllocator> logger) : IMatchmakerAllocator
+public class GameLiftAllocator(IGameApiClient gameApiClient, IGameLiftFactory gameLiftFactory, ILogger<GameLiftAllocator> logger) : IMatchmakerAllocator
 {
-
     // Configuration - users should modify these constants for their setup
     private const string GameSessionQueueName = "MyQueue"; // TODO: Replace with actual queue name
     private const int DefaultMaximumPlayerSessionCount = 10;
@@ -52,12 +52,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
             var secretAccessKey = await gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
 
             // Create GameLift client with credentials from secrets
-            var credentials = new BasicAWSCredentials(accessKeyId.Value, secretAccessKey.Value);
-            var config = new AmazonGameLiftConfig
-            {
-                RegionEndpoint = RegionEndpoint.GetBySystemName(region)
-            };
-            using var client = new AmazonGameLiftClient(credentials, config);
+            using var client = gameLiftFactory.Create(accessKeyId.Value, secretAccessKey.Value, region);
 
             // Serialize match data for the game server
             var gameSessionData = JsonSerializer.Serialize(request.MatchmakingResults);
@@ -91,7 +86,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
 
             return new AllocateResponse(AllocateStatus.Error)
             {
-                Message = $"Failed to start game session placement: {ex.Message}"
+                Message = $"Failed to start game session placement: {ex}"
             };
         }
     }
@@ -100,15 +95,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
     public async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var placementId = request.AllocationData["placementId"]?.ToString();
-        var awsRegion = request.AllocationData["awsRegion"]?.ToString() ?? DefaultAwsRegion;
-
-        if (string.IsNullOrEmpty(placementId))
-        {
-            return new PollResponse(PollStatus.Error)
-            {
-                Message = "Missing placementId in allocation data"
-            };
-        }
+        var region = request.AllocationData["awsRegion"]?.ToString();
 
         try
         {
@@ -117,12 +104,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
             var secretAccessKey = await gameApiClient.SecretManager.GetSecret(context, AwsSecretAccessKeySecretName);
 
             // Create GameLift client with credentials from secrets
-            var credentials = new BasicAWSCredentials(accessKeyId.Value, secretAccessKey.Value);
-            var config = new AmazonGameLiftConfig
-            {
-                RegionEndpoint = RegionEndpoint.GetBySystemName(awsRegion)
-            };
-            using var client = new AmazonGameLiftClient(credentials, config);
+            using var client = gameLiftFactory.Create(accessKeyId.Value, secretAccessKey.Value, region);
 
             var describeRequest = new DescribeGameSessionPlacementRequest
             {
@@ -166,5 +148,43 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
                 Message = $"Failed to describe game session placement: {ex.Message}"
             };
         }
+    }
+}
+
+/// <summary>
+/// Factory for creating Amazon GameLift clients.
+/// </summary>
+public interface IGameLiftFactory
+{
+    /// <summary>
+    /// Creates an Amazon GameLift client with the specified credentials and region.
+    /// </summary>
+    /// <param name="accessKeyId">The access key ID for the AWS account.</param>
+    /// <param name="secretAccessKey">The secret access key for the AWS account.</param>
+    /// <param name="region">The AWS region to use.</param>
+    /// <returns>An instance of <see cref="IAmazonGameLift"/>.</returns>
+    IAmazonGameLift Create(string accessKeyId, string secretAccessKey, string region);
+}
+
+/// <summary>
+/// Implementation of <see cref="IGameLiftFactory"/> that creates Amazon GameLift clients.
+/// </summary>
+public class GameLiftFactory : IGameLiftFactory
+{
+    /// <summary>
+    /// Creates an Amazon GameLift client with the specified credentials and region.
+    /// </summary>
+    /// <param name="accessKeyId">The access key ID for the AWS account.</param>
+    /// <param name="secretAccessKey">The secret access key for the AWS account.</param>
+    /// <param name="region">The AWS region to use.</param>
+    /// <returns>An instance of <see cref="IAmazonGameLift"/>.</returns>
+    public IAmazonGameLift Create(string accessKeyId, string secretAccessKey, string region)
+    {
+        var credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
+        var config = new AmazonGameLiftConfig
+        {
+            RegionEndpoint = RegionEndpoint.GetBySystemName(region)
+        };
+        return new AmazonGameLiftClient(credentials, config);
     }
 }
