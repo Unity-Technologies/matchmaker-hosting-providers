@@ -29,8 +29,19 @@ public class ModuleConfig : ICloudCodeSetup
 public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAllocator> logger)
     : IMatchmakerAllocator
 {
-    const string AllocationUserFriendlyError = "An error occured when allocating.";
-    const string PollUserFriendlyError = "An error occured when polling the server status.";
+    /// <summary>
+    /// You will need to set up your PlayFab Build Id.
+    /// </summary>
+    const string PlayFabBuildId = "MY_BUILD_ID"; // TODO: Replace with your PlayFab Build Id
+
+    /// <summary>
+    /// You will need to set up your PlayFab Title Id.
+    /// </summary>
+    const string PlayFabTitleId = "MY_TITLE_ID"; // TODO: Replace with your PlayFab Title Id
+
+    /// <summary>
+    /// You can change the default region as needed.
+    /// </summary>
     const string DefaultPlayFabRegion = "EastUs";
 
     /// <summary>
@@ -40,20 +51,8 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
     /// containing your PlayFab Developer Secret Key.
     /// </summary>
     const string DeveloperSecretKey = "DEVELOPER_SECRET_KEY";
-
-    /// <summary>
-    /// You will need to set up a secret in the <a
-    /// href="https://cloud.unity.com">Unity Dashboard</a> with the
-    /// <c>PLAYFAB_BUILD_ID</c> key containing your PlayFab Build Id.
-    /// </summary>
-    const string PlayFabBuildId = "HARDCODED_BUILD_ID";
-
-    /// <summary>
-    /// You will need to set up a secret in the <a
-    /// href="https://cloud.unity.com">Unity Dashboard</a> with
-    /// the <c>TITLE_ID</c> key containing your PlayFab Title Id.
-    /// </summary>
-    const string PlayFabTitleId = "HARDCODED_ID";
+    const string AllocationUserFriendlyError = "An error occured when allocating.";
+    const string PollUserFriendlyError = "An error occured when polling the server status.";
 
     readonly ILogger _logger = logger;
 
