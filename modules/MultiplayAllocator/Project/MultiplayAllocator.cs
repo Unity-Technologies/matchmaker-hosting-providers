@@ -10,7 +10,7 @@ using System;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 
-namespace MultiplayAllocator;
+namespace MultiplayAllocatorModule;
 
 public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmakerAllocator
 {

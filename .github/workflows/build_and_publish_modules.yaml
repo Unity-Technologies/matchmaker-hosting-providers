@@ -26,3 +26,14 @@ jobs:
           file: ${{ matrix.module }}.ccm
           tag: ${{ github.ref }}
           overwrite: true
+
+  test:
+    name: Test Modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+      - name: Test Modules
+        run: dotnet test modules/AllocatorTests
