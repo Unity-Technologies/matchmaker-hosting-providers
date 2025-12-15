@@ -30,6 +30,7 @@ public class PlayFabAllocator : IMatchmakerAllocator
 {
     const string AllocationUserFriendlyError = "An error occured when allocating.";
     const string PollUserFriendlyError = "An error occured when polling the server status.";
+    const string DefaultPlayFabRegion = "EastUs";
 
     /// <summary>
     /// You will need to set up a secret in the <a
@@ -52,15 +53,6 @@ public class PlayFabAllocator : IMatchmakerAllocator
     /// the <c>TITLE_ID</c> key containing your PlayFab Title Id.
     /// </summary>
     const string PlayFabTitleId = "TITLE_ID";
-
-    static readonly Dictionary<string, string> RegionMap = new()
-    {
-        ["us-east"] = "EastUs",
-        ["us-west"] = "WestUs",
-        ["eu-west"] = "WestEurope",
-        ["asia-east"] = "EastAsia",
-        ["asia-southeast"] = "SoutheastAsia"
-    };
 
     readonly IGameApiClient _gameApiClient;
     readonly Action<string, Exception?> LogDebug;
@@ -146,7 +138,7 @@ public class PlayFabAllocator : IMatchmakerAllocator
 
             var multiplayerInstanceApi = new PlayFabMultiplayerInstanceAPI(playFabApiSettings, authenticationContext);
 
-            var preferredRegion = GetPreferredRegion(request);
+            var preferredRegion = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultPlayFabRegion;
             if (preferredRegion is null or "")
             {
                 const string error =
@@ -289,17 +281,6 @@ public class PlayFabAllocator : IMatchmakerAllocator
             LogError(error, e);
             return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
         }
-    }
-
-    static string? GetPreferredRegion(AllocateRequest request)
-    {
-        if (!request.MatchmakingResults.MatchProperties.TryGetValue("Region", out var regionValue))
-        {
-            return null;
-        }
-
-        var unityRegion = regionValue.ToString() ?? string.Empty;
-        return RegionMap.GetValueOrDefault(unityRegion);
     }
 
     bool IsValid(PlayFabResult<GetEntityTokenResponse> entityTokenRequestResult)
