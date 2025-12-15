@@ -2,17 +2,25 @@ using System.Collections.Generic;
 using Unity.Services.CloudCode.Core;
 using Unity.Services.CloudCode.Apis.Matchmaker;
 using System.Threading.Tasks;
-using System.Text.Json;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System;
-using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 
 namespace MultiplayAllocatorModule;
 
-public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmakerAllocator
+public class ModuleConfig : ICloudCodeSetup
+{
+    public void Setup(ICloudCodeConfig config)
+    {
+        config.Dependencies.AddScoped<IMultiplayHttpClientFactory, MultiplayHttpClientFactory>();
+    }
+}
+
+public class MultiplayAllocator(ILogger<MultiplayAllocator> logger, IMultiplayHttpClientFactory httpClientFactory) : IMatchmakerAllocator
 {
     // Configuration - users should modify these constants for their setup
     private const string FleetId = "your_fleet_id";
@@ -28,17 +36,16 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmake
         var createAllocationUrl = $"https://{MultiplayHost}/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
         var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegion;
 
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
+        using var client = httpClientFactory.Create(context.ServiceToken);
 
         try
         {
-            var content = new StringContent(JsonSerializer.Serialize(new MultiplayAllocateRequest()
+            var content = new StringContent(JsonConvert.SerializeObject(new MultiplayAllocateRequest()
             {
                 AllocationId = Guid.NewGuid().ToString(),
                 BuildConfigurationId = BuildConfigId,
                 RegionId = region,
-                Payload = JsonSerializer.Serialize(request.MatchmakingResults)
+                Payload = JsonConvert.SerializeObject(request.MatchmakingResults)
             }), Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync(createAllocationUrl, content);
@@ -54,15 +61,13 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmake
                 };
             }
 
-            var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocateResponse>(responseContent);
+            var multiplayAllocation = JsonConvert.DeserializeObject<MultiplayAllocateResponse>(responseContent);
 
             return new AllocateResponse(AllocateStatus.Created)
             {
                 AllocationData = new Dictionary<string, object>
                 {
                     { "allocationId", multiplayAllocation?.AllocationId ?? string.Empty },
-                    { "startTime", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() },
-                    { "matchId", request.MatchId },
                     { "region", region }
                 }
             };
@@ -84,8 +89,7 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmake
         var allocationId = request.AllocationData["allocationId"].ToString();
         var getAllocationsUrl = $"https://{MultiplayHost}/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
 
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", context.ServiceToken);
+        using var client = httpClientFactory.Create(context.ServiceToken);
 
         try
         {
@@ -100,7 +104,7 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmake
                 };
             }
 
-            var multiplayAllocation = JsonSerializer.Deserialize<MultiplayAllocationStatus>(responseContent);
+            var multiplayAllocation = JsonConvert.DeserializeObject<MultiplayAllocationStatus>(responseContent);
 
             if (!string.IsNullOrEmpty(multiplayAllocation?.Fulfilled))
             {
@@ -130,41 +134,56 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger) : IMatchmake
     }
 }
 
+public interface IMultiplayHttpClientFactory
+{
+    HttpClient Create(string serviceToken);
+}
+
+public class MultiplayHttpClientFactory : IMultiplayHttpClientFactory
+{
+    public HttpClient Create(string serviceToken)
+    {
+        var client = new HttpClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", serviceToken);
+        return client;
+    }
+}
+
 class MultiplayAllocateRequest
 {
-    [JsonPropertyName("allocationId")]
+    [JsonProperty("allocationId")]
     public string? AllocationId { get; set; }
-    [JsonPropertyName("buildConfigurationId")]
+    [JsonProperty("buildConfigurationId")]
     public int BuildConfigurationId { get; set; }
-    [JsonPropertyName("regionId")]
+    [JsonProperty("regionId")]
     public string? RegionId { get; set; }
-    [JsonPropertyName("payload")]
+    [JsonProperty("payload")]
     public string? Payload { get; set; }
 }
 
 class MultiplayAllocateResponse
 {
-    [JsonPropertyName("allocationId")]
+    [JsonProperty("allocationId")]
     public string? AllocationId { get; set; }
 }
 
 class MultiplayAllocationStatus
 {
-    [JsonPropertyName("allocationId")]
+    [JsonProperty("allocationId")]
     public string? AllocationId { get; set; }
 
-    [JsonPropertyName("fulfilled")]
+    [JsonProperty("fulfilled")]
     public string? Fulfilled { get; set; }
 
-    [JsonPropertyName("readiness")]
+    [JsonProperty("readiness")]
     public bool Readiness { get; set; }
 
-    [JsonPropertyName("ready")]
+    [JsonProperty("ready")]
     public string? Ready { get; set; }
 
-    [JsonPropertyName("ipv4")]
+    [JsonProperty("ipv4")]
     public string? Ipv4 { get; set; }
 
-    [JsonPropertyName("gamePort")]
+    [JsonProperty("gamePort")]
     public int GamePort { get; set; }
 }
