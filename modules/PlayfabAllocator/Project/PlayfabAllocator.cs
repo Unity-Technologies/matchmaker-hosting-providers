@@ -30,10 +30,37 @@ public class PlayfabAllocator : IMatchmakerAllocator
 {
     const string AllocationUserFriendlyError = "An error occured when allocating.";
     const string PollUserFriendlyError = "An error occured when polling the server status.";
+
+    /// <summary>
+    /// You will need to set up a secret in the <a
+    /// href="https://cloud.unity.com">Unity Dashboard</a>
+    /// with the <c>DEVELOPER_SECRET_KEY</c> key
+    /// containing your PlayFab Developer Secret Key.
+    /// </summary>
     const string DeveloperSecretKey = "DEVELOPER_SECRET_KEY";
+
+    /// <summary>
+    /// You will need to set up a secret in the <a
+    /// href="https://cloud.unity.com">Unity Dashboard</a> with the
+    /// <c>PLAYFAB_BUILD_ID</c> key containing your PlayFab Build Id.
+    /// </summary>
     const string PlayfabBuildId = "PLAYFAB_BUILD_ID";
+
+    /// <summary>
+    /// You will need to set up a secret in the <a
+    /// href="https://cloud.unity.com">Unity Dashboard</a> with
+    /// the <c>TITLE_ID</c> key containing your PlayFab Title Id.
+    /// </summary>
     const string PlayfabTitleId = "TITLE_ID";
-    static readonly Dictionary<string, string> RegionMap = new() { ["us-east"] = "EastUs" };
+
+    static readonly Dictionary<string, string> RegionMap = new()
+    {
+        ["us-east"] = "EastUs",
+        ["us-west"] = "WestUs",
+        ["eu-west"] = "WestEurope",
+        ["asia-east"] = "EastAsia",
+        ["asia-southeast"] = "SoutheastAsia"
+    };
 
     readonly IGameApiClient _gameApiClient;
     readonly Action<string, Exception?> LogDebug;
