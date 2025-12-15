@@ -39,30 +39,11 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
     private const string AwsAccessKeyIdSecretName = "AWS_ACCESS_KEY_ID";
     private const string AwsSecretAccessKeySecretName = "AWS_SECRET_ACCESS_KEY";
 
-    // Map the Unity regions to your AWS fleet regions. // TODO: Update this with Unity QoS actual regions
-    private static readonly Dictionary<string, string> RegionMap = new()
-    {
-        ["us-east"] = "us-east-1",
-        ["us-west"] = "us-west-2",
-        ["eu-west"] = "eu-west-1",
-        ["eu-central"] = "eu-central-1",
-        ["asia-east"] = "ap-northeast-1",
-        ["asia-southeast"] = "ap-southeast-1"
-    };
-
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         // Determine AWS region from match properties or use default
-        var awsRegion = DefaultAwsRegion;
-        if (request.MatchmakingResults.MatchProperties.TryGetValue("region", out var regionValue))
-        {
-            var unityRegion = regionValue?.ToString() ?? "";
-            if (RegionMap.TryGetValue(unityRegion, out var mappedRegion))
-            {
-                awsRegion = mappedRegion;
-            }
-        }
+        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultAwsRegion;
 
         try
         {
@@ -74,7 +55,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
             var credentials = new BasicAWSCredentials(accessKeyId.Value, secretAccessKey.Value);
             var config = new AmazonGameLiftConfig
             {
-                RegionEndpoint = RegionEndpoint.GetBySystemName(awsRegion)
+                RegionEndpoint = RegionEndpoint.GetBySystemName(region)
             };
             using var client = new AmazonGameLiftClient(credentials, config);
 
@@ -98,7 +79,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, ILogger<GameLiftAll
                 AllocationData = new Dictionary<string, object>
                 {
                     { "placementId", placement.PlacementId },
-                    { "awsRegion", awsRegion },
+                    { "awsRegion", region },
                     { "startTime", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() },
                     { "matchId", request.MatchId }
                 }
