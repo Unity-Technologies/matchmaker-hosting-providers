@@ -57,7 +57,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
 
     readonly ILogger _logger = logger;
 
-    [CloudCodeFunction(nameof(Allocate))]
+    [CloudCodeFunction("Matchmaker_AllocateServer")]
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         try
@@ -150,7 +150,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
         }
     }
 
-    [CloudCodeFunction(nameof(Poll))]
+    [CloudCodeFunction("Matchmaker_PollAllocation")]
     public async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         try
