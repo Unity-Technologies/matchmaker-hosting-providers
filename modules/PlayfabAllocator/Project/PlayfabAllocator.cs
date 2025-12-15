@@ -267,9 +267,9 @@ public class PlayfabAllocator : IMatchmakerAllocator
             switch (detailsResult.Result.State)
             {
                 case "StandingBy":
+                case "Initializing":
                     return new PollResponse(PollStatus.Pending);
                 case "Active":
-                case "Allocated":
                     return new PollResponse(PollStatus.Allocated)
                     {
                         AssignmentData = AssignmentData.IpPort(
