@@ -16,10 +16,11 @@ namespace AllocatorTests;
 
 public class PlayFabAllocatorTests
 {
+    readonly FakeLogger<PlayFabAllocator> _fakeLogger = new();
+
     readonly Mock<IPlayFabFactory> _playFabFactoryMock = new();
     readonly Mock<ISecretClient> _secretClientMock = new();
     readonly Mock<IGameApiClient> _gameClientMock = new();
-    readonly FakeLogger<PlayFabAllocator> _fakeLogger = new();
     readonly Mock<IPlayFabAuthenticationApi> _authenticationApiMock = new();
     readonly Mock<IPlayFabMultiplayerInstanceAPI> _multiplayerInstanceApiMock = new();
     readonly Mock<IExecutionContext> _executionContextMock = new();
@@ -49,7 +50,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secrets for key 'DEVELOPER_SECRET_KEY'."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secret for key 'DEVELOPER_SECRET_KEY'."));
             Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Error));
         }
     }
@@ -312,7 +313,7 @@ public class PlayFabAllocatorTests
     }
 
     [Test]
-    public async Task TestThatPlayFabCanPoll()
+    public async Task WillReturnPollStatusAllocatedWhenPollingAValidSessionId()
     {
         _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
             .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
@@ -354,6 +355,153 @@ public class PlayFabAllocatorTests
             Assert.That(poll.AssignmentData.Type, Is.EqualTo(AssignmentType.IpPort));
             Assert.That(poll.AssignmentData.Ip, Is.EqualTo("127.0.0.1"));
             Assert.That(poll.AssignmentData.Port, Is.EqualTo(1234));
+        }
+    }
+
+    [Test]
+    public async Task WillLogAndReturnPollFailureWhenPollingWrongSessionId()
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
+            {
+                Result = new GetEntityTokenResponse
+                {
+                    EntityToken = "token",
+                    Entity = new EntityKey { Id = "entityId", Type = "entityType" }
+                }
+            });
+
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId")))
+            .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
+            {
+                Result = new GetMultiplayerServerDetailsResponse
+                {
+                    State = "Active",
+                    IPV4Address = "127.0.0.1",
+                    Ports = [new Port { Num = 1234 }]
+                }
+            });
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "wrongSessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
+            Assert.That(poll.Message, Is.Not.Null);
+            Assert.That(poll.AssignmentData, Is.Null);
+        }
+    }
+
+    [Test]
+    public async Task WillLogAndReturnPollErrorWhenSecretIsNotFound()
+    {
+        _secretClientMock.Setup(s => s.GetSecret(_executionContextMock.Object, It.IsAny<string>()))
+            .ThrowsAsync(new Exception("Secret not found."));
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secret for key 'DEVELOPER_SECRET_KEY'."));
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
+        }
+    }
+
+    [Test]
+    public async Task WillLogAndReturnPollErrorWhenAuthenticationFails()
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>())).Throws<Exception>();
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving the entity token."));
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
+        }
+    }
+
+    [TestCaseSource(nameof(InvalidAuthenticationResultTestCases))]
+    public async Task WillLogAndReturnPollErrorWhenAuthenticationResultIsInvalid(
+        PlayFabResult<GetEntityTokenResponse> tokenResponse,
+        string expectedLogMessagePart)
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(tokenResponse);
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Does.Contain(expectedLogMessagePart));
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
+        }
+    }
+
+    static IEnumerable<TestCaseData> InvalidPollResultTestCases()
+    {
+        yield return new TestCaseData(null, "The result is null");
+        yield return new TestCaseData(
+            new PlayFabResult<GetMultiplayerServerDetailsResponse>
+            {
+                Error = new PlayFabError { ErrorMessage = "Poll failed" }
+            },
+            "An error occured when calling");
+    }
+
+    [TestCaseSource(nameof(InvalidPollResultTestCases))]
+    public async Task WillLogAndReturnPollErrorWhenPollResultIsInvalid(
+        PlayFabResult<GetMultiplayerServerDetailsResponse> pollResult,
+        string expectedLogMessagePart)
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
+            {
+                Result = new GetEntityTokenResponse
+                {
+                    EntityToken = "token",
+                    Entity = new EntityKey { Id = "entityId", Type = "entityType" }
+                }
+            });
+
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.IsAny<GetMultiplayerServerDetailsRequest>()))
+            .ReturnsAsync(pollResult);
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Does.Contain(expectedLogMessagePart));
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
         }
     }
 }

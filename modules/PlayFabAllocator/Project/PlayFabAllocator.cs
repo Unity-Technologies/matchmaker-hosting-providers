@@ -67,7 +67,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         }
         catch (Exception e)
         {
-            _logger.LogError(e, $"An error occured when retrieving secrets for key '{DeveloperSecretKey}'.");
+            _logger.LogError(e, $"An error occured when retrieving secret for key '{DeveloperSecretKey}'.");
             return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
         }
 
