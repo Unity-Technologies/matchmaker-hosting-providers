@@ -134,7 +134,7 @@ public class PlayFabAllocatorTests
                 }
             });
 
-        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.IsAny<GetMultiplayerServerDetailsRequest>()))
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId")))
             .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
             {
                 Result = new GetMultiplayerServerDetailsResponse
