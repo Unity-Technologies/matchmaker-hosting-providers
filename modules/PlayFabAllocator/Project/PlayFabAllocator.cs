@@ -23,10 +23,11 @@ public class ModuleConfig : ICloudCodeSetup
     public void Setup(ICloudCodeConfig config)
     {
         config.Dependencies.AddSingleton(GameApiClient.Create());
+        config.Dependencies.AddScoped<IPlayFabFactory, PlayFabFactory>();
     }
 }
 
-public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAllocator> logger)
+public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory playFabFactory, ILogger<PlayFabAllocator> logger)
     : IMatchmakerAllocator
 {
     /// <summary>
@@ -76,9 +77,8 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
         GetEntityTokenResponse tokenRequestResponse;
         try
         {
-            var entityTokenRequest = new GetEntityTokenRequest();
-            var entityTokenRequestResult =
-                await PlayFabAuthenticationAPI.GetEntityTokenAsync(entityTokenRequest, playFabApiSettings);
+            var authenticationApi = playFabFactory.CreateAuthenticationApi(playFabApiSettings);
+            var entityTokenRequestResult = await authenticationApi.GetEntityTokenAsync();
 
             if (!IsValid(entityTokenRequestResult))
             {
@@ -103,7 +103,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
                 EntityType = tokenRequestResponse.Entity.Type
             };
 
-            var multiplayerInstanceApi = new PlayFabMultiplayerInstanceAPI(playFabApiSettings, authenticationContext);
+            var multiplayerInstanceApi = playFabFactory.CreateMultiplayerInstanceApi(playFabApiSettings, authenticationContext);
 
             var preferredRegion = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultPlayFabRegion;
             if (preferredRegion is null or "")
@@ -132,9 +132,9 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
                     AllocationData = new Dictionary<string, object>
                     {
                         { "sessionId", allocationResult.Result.SessionId },
-                        { "playfabRegion", allocationResult.Result.Region },
+                        { "playfabRegion", preferredRegion },
                         { "startTime", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() },
-                        { "matchId", allocationResult.Result.SessionId }
+                        { "matchId", request.MatchId }
                     }
                 };
             }
@@ -170,9 +170,8 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
         GetEntityTokenResponse tokenRequestResponse;
         try
         {
-            var entityTokenRequest = new GetEntityTokenRequest();
-            var entityTokenRequestResult =
-                await PlayFabAuthenticationAPI.GetEntityTokenAsync(entityTokenRequest, playFabApiSettings);
+            var authenticationApi = playFabFactory.CreateAuthenticationApi(playFabApiSettings);
+            var entityTokenRequestResult = await authenticationApi.GetEntityTokenAsync();
 
             if (!IsValid(entityTokenRequestResult))
             {
@@ -197,7 +196,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
                 EntityType = tokenRequestResponse.Entity.Type
             };
 
-            var multiplayerInstanceApi = new PlayFabMultiplayerInstanceAPI(playFabApiSettings, authenticationContext);
+            var multiplayerInstanceApi = playFabFactory.CreateMultiplayerInstanceApi(playFabApiSettings, authenticationContext);
 
             var multiplayerServerDetailsRequest = new GetMultiplayerServerDetailsRequest
             {
@@ -249,18 +248,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
             case { Error: not null }:
                 _logger.LogError("An error occured when calling {method}. The result is null. Error: {error}.", nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync), SerializeToJson(entityTokenRequestResult.Error));
                 return false;
-            case
-            {
-                Result:
-                {
-                    EntityToken: not null and not "",
-                    Entity:
-                    {
-                        Id: not null and not "",
-                        Type: not null and not ""
-                    }
-                }
-            }:
+            case { Result: { EntityToken.Length: > 0, Entity: { Id.Length: > 0, Type.Length: > 0 } } }:
                 return true;
             default:
                 _logger.LogError("An error occured when calling {method}. The result is null. Token is malformed. Token: {result}.", nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync), SerializeToJson(entityTokenRequestResult.Result));
@@ -306,5 +294,84 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, ILogger<PlayFabAlloc
     static string SerializeToJson<T>(T obj)
     {
         return JsonConvert.SerializeObject(obj, Formatting.Indented);
+    }
+}
+
+/// <summary>
+/// Factory for creating PlayFab API clients.
+/// </summary>
+public interface IPlayFabFactory
+{
+    /// <summary>
+    /// Creates a PlayFab authentication API instance.
+    /// </summary>
+    IPlayFabAuthenticationApi CreateAuthenticationApi(PlayFabApiSettings settings);
+
+    /// <summary>
+    /// Creates a PlayFab multiplayer instance API.
+    /// </summary>
+    IPlayFabMultiplayerInstanceApi CreateMultiplayerInstanceApi(PlayFabApiSettings settings, PlayFabAuthenticationContext context);
+}
+
+/// <summary>
+/// Wrapper interface for PlayFab authentication API.
+/// </summary>
+public interface IPlayFabAuthenticationApi
+{
+    Task<PlayFabResult<GetEntityTokenResponse>> GetEntityTokenAsync();
+}
+
+/// <summary>
+/// Wrapper interface for PlayFab multiplayer instance API.
+/// </summary>
+public interface IPlayFabMultiplayerInstanceApi
+{
+    Task<PlayFabResult<RequestMultiplayerServerResponse>> RequestMultiplayerServerAsync(RequestMultiplayerServerRequest request);
+    Task<PlayFabResult<GetMultiplayerServerDetailsResponse>> GetMultiplayerServerDetailsAsync(GetMultiplayerServerDetailsRequest request);
+}
+
+/// <summary>
+/// Implementation of <see cref="IPlayFabFactory"/>.
+/// </summary>
+public class PlayFabFactory : IPlayFabFactory
+{
+    public IPlayFabAuthenticationApi CreateAuthenticationApi(PlayFabApiSettings settings)
+    {
+        return new PlayFabAuthenticationApiWrapper(settings);
+    }
+
+    public IPlayFabMultiplayerInstanceApi CreateMultiplayerInstanceApi(PlayFabApiSettings settings, PlayFabAuthenticationContext context)
+    {
+        return new PlayFabMultiplayerInstanceApiWrapper(settings, context);
+    }
+}
+
+/// <summary>
+/// Wrapper implementation for PlayFab authentication API.
+/// </summary>
+public class PlayFabAuthenticationApiWrapper(PlayFabApiSettings settings) : IPlayFabAuthenticationApi
+{
+    public Task<PlayFabResult<GetEntityTokenResponse>> GetEntityTokenAsync()
+    {
+        return PlayFabAuthenticationAPI.GetEntityTokenAsync(new GetEntityTokenRequest(), settings);
+    }
+}
+
+/// <summary>
+/// Wrapper implementation for PlayFab multiplayer instance API.
+/// </summary>
+public class PlayFabMultiplayerInstanceApiWrapper(PlayFabApiSettings settings, PlayFabAuthenticationContext context)
+    : IPlayFabMultiplayerInstanceApi
+{
+    readonly PlayFabMultiplayerInstanceAPI _api = new(settings, context);
+
+    public Task<PlayFabResult<RequestMultiplayerServerResponse>> RequestMultiplayerServerAsync(RequestMultiplayerServerRequest request)
+    {
+        return _api.RequestMultiplayerServerAsync(request);
+    }
+
+    public Task<PlayFabResult<GetMultiplayerServerDetailsResponse>> GetMultiplayerServerDetailsAsync(GetMultiplayerServerDetailsRequest request)
+    {
+        return _api.GetMultiplayerServerDetailsAsync(request);
     }
 }
