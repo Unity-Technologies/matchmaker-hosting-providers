@@ -106,10 +106,10 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
             var multiplayerInstanceApi = playFabFactory.CreateMultiplayerInstanceApi(playFabApiSettings, authenticationContext);
 
             var preferredRegion = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultPlayFabRegion;
-            if (preferredRegion is null or "")
+            if (preferredRegion is "")
             {
                 const string error =
-                    "An error occured when retrieving the region in matchmaking properties. The region field must be present, non-null and non-empty.";
+                    "An error occured when retrieving the region in matchmaking properties. The region field must be non-empty.";
                 _logger.LogError(error);
                 return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
             }
