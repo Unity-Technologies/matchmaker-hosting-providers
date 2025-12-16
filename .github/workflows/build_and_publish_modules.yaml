@@ -1,11 +1,11 @@
-name: Build and Publish Modules
+name: CI
 
 on:
   push:
 
 jobs:
   build:
-    name: Build and Publish Module
+    name: Build and Pack Module
     runs-on: ubuntu-latest
     strategy:
       matrix:
