@@ -2,7 +2,6 @@ name: Build and Publish Modules
 
 on:
   push:
-  release:
 
 jobs:
   build:
@@ -20,14 +19,6 @@ jobs:
         run: dotnet publish -c Release modules/${{ matrix.module }} -o publish
       - name: Bundle Module Archive
         run: zip -r ${{ matrix.module }}.ccm publish/*
-      - name: Publish to GH Release
-        if: github.event_name == 'release'
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ matrix.module }}.ccm
-          tag: ${{ github.ref }}
-          overwrite: true
 
   test:
     name: Test Modules
