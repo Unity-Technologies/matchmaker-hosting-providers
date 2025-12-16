@@ -16,7 +16,7 @@ A collection of examples to connect Unity Matchmaker with various game server ho
 
 Select the hosting provider that you want to use under `modules/<provider_name>`
 
-Update the remote config variables in: `modules/<provider_name>/Config.rc`
+Edit the module files to set the required configuration variables.
 
 ```sh
 # will deploy remote config, matchmaker and cloud code files
