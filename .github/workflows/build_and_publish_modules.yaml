@@ -36,4 +36,4 @@ jobs:
         with:
           dotnet-version: "8.0.x"
       - name: Test Modules
-        run: dotnet test modules/AllocatorTests
+        run: dotnet test tests/AllocatorTests

@@ -74,6 +74,7 @@ public class GameLiftAllocatorTests
                 {"region", "customRegion"},
             })));
         
+        Assert.That(allocation.AllocationData, Is.Not.Null);
         Assert.That(allocation.AllocationData["awsRegion"], Is.EqualTo("customRegion"));
     }
     

@@ -94,8 +94,16 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, IGameLiftFactory ga
     [CloudCodeFunction("Matchmaker_PollAllocation")]
     public async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
-        var placementId = request.AllocationData["placementId"]?.ToString();
-        var region = request.AllocationData["awsRegion"]?.ToString();
+        var placementId = request.AllocationData["placementId"].ToString();
+        var region = request.AllocationData["awsRegion"].ToString();
+
+        if (region == null)
+        {
+            return new PollResponse(PollStatus.Error)
+            {
+                Message = "Poll region was not specified"
+            };
+        }
 
         try
         {
