@@ -20,7 +20,7 @@ public class PlayFabAllocatorTests
     readonly Mock<IGameApiClient> _gameClientMock = new();
     readonly Mock<ILogger<PlayFabAllocator>> _loggerMock = new();
     readonly Mock<IPlayFabAuthenticationApi> _authenticationApiMock = new();
-    readonly Mock<IPlayFabMultiplayerInstanceApi> _multiplayerInstanceApiMock = new();
+    readonly Mock<IPlayFabMultiplayerInstanceAPI> _multiplayerInstanceApiMock = new();
     readonly Mock<IExecutionContext> _executionContextMock = new();
 
     PlayFabAllocator _allocator;
@@ -31,17 +31,15 @@ public class PlayFabAllocatorTests
         _gameClientMock.SetupGet(g => g.SecretManager).Returns(_secretClientMock.Object);
         _secretClientMock.Setup(s => s.GetSecret(_executionContextMock.Object, It.IsAny<string>()))
             .ReturnsAsync(new Secret("secret"));
-        _playFabFactoryMock.Setup(f => f.CreateAuthenticationApi(It.IsAny<PlayFabApiSettings>()))
-            .Returns(_authenticationApiMock.Object);
         _playFabFactoryMock.Setup(f => f.CreateMultiplayerInstanceApi(It.IsAny<PlayFabApiSettings>(), It.IsAny<PlayFabAuthenticationContext>()))
             .Returns(_multiplayerInstanceApiMock.Object);
-        _allocator = new PlayFabAllocator(_gameClientMock.Object, _playFabFactoryMock.Object, _loggerMock.Object);
+        _allocator = new PlayFabAllocator(_gameClientMock.Object, _playFabFactoryMock.Object, _authenticationApiMock.Object, _loggerMock.Object);
     }
 
     [Test]
     public async Task TestThatPlayFabCanAllocate()
     {
-        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync())
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
             .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
             {
                 Result = new GetEntityTokenResponse
@@ -81,7 +79,7 @@ public class PlayFabAllocatorTests
     [Test]
     public async Task TestThatPlayFabCanAllocateToRegions()
     {
-        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync())
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
             .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
             {
                 Result = new GetEntityTokenResponse
@@ -124,7 +122,7 @@ public class PlayFabAllocatorTests
     [Test]
     public async Task TestThatPlayFabCanPoll()
     {
-        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync())
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
             .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
             {
                 Result = new GetEntityTokenResponse

@@ -24,10 +24,11 @@ public class ModuleConfig : ICloudCodeSetup
     {
         config.Dependencies.AddSingleton(GameApiClient.Create());
         config.Dependencies.AddScoped<IPlayFabFactory, PlayFabFactory>();
+        config.Dependencies.AddScoped<IPlayFabAuthenticationApi, PlayFabAuthenticationApi>();
     }
 }
 
-public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory playFabFactory, ILogger<PlayFabAllocator> logger)
+public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory playFabFactory, IPlayFabAuthenticationApi authenticationApi, ILogger<PlayFabAllocator> logger)
     : IMatchmakerAllocator
 {
     /// <summary>
@@ -77,8 +78,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         GetEntityTokenResponse tokenRequestResponse;
         try
         {
-            var authenticationApi = playFabFactory.CreateAuthenticationApi(playFabApiSettings);
-            var entityTokenRequestResult = await authenticationApi.GetEntityTokenAsync();
+            var entityTokenRequestResult = await authenticationApi.GetEntityTokenAsync(playFabApiSettings);
 
             if (!IsValid(entityTokenRequestResult))
             {
@@ -170,8 +170,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         GetEntityTokenResponse tokenRequestResponse;
         try
         {
-            var authenticationApi = playFabFactory.CreateAuthenticationApi(playFabApiSettings);
-            var entityTokenRequestResult = await authenticationApi.GetEntityTokenAsync();
+            var entityTokenRequestResult = await authenticationApi.GetEntityTokenAsync(playFabApiSettings);
 
             if (!IsValid(entityTokenRequestResult))
             {
@@ -303,31 +302,9 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
 public interface IPlayFabFactory
 {
     /// <summary>
-    /// Creates a PlayFab authentication API instance.
-    /// </summary>
-    IPlayFabAuthenticationApi CreateAuthenticationApi(PlayFabApiSettings settings);
-
-    /// <summary>
     /// Creates a PlayFab multiplayer instance API.
     /// </summary>
-    IPlayFabMultiplayerInstanceApi CreateMultiplayerInstanceApi(PlayFabApiSettings settings, PlayFabAuthenticationContext context);
-}
-
-/// <summary>
-/// Wrapper interface for PlayFab authentication API.
-/// </summary>
-public interface IPlayFabAuthenticationApi
-{
-    Task<PlayFabResult<GetEntityTokenResponse>> GetEntityTokenAsync();
-}
-
-/// <summary>
-/// Wrapper interface for PlayFab multiplayer instance API.
-/// </summary>
-public interface IPlayFabMultiplayerInstanceApi
-{
-    Task<PlayFabResult<RequestMultiplayerServerResponse>> RequestMultiplayerServerAsync(RequestMultiplayerServerRequest request);
-    Task<PlayFabResult<GetMultiplayerServerDetailsResponse>> GetMultiplayerServerDetailsAsync(GetMultiplayerServerDetailsRequest request);
+    IPlayFabMultiplayerInstanceAPI CreateMultiplayerInstanceApi(PlayFabApiSettings settings, PlayFabAuthenticationContext context);
 }
 
 /// <summary>
@@ -335,43 +312,27 @@ public interface IPlayFabMultiplayerInstanceApi
 /// </summary>
 public class PlayFabFactory : IPlayFabFactory
 {
-    public IPlayFabAuthenticationApi CreateAuthenticationApi(PlayFabApiSettings settings)
+    public IPlayFabMultiplayerInstanceAPI CreateMultiplayerInstanceApi(PlayFabApiSettings settings, PlayFabAuthenticationContext context)
     {
-        return new PlayFabAuthenticationApiWrapper(settings);
+        return new PlayFabMultiplayerInstanceAPI(settings, context);
     }
+}
 
-    public IPlayFabMultiplayerInstanceApi CreateMultiplayerInstanceApi(PlayFabApiSettings settings, PlayFabAuthenticationContext context)
-    {
-        return new PlayFabMultiplayerInstanceApiWrapper(settings, context);
-    }
+/// <summary>
+/// Wrapper interface for PlayFab authentication API.
+/// </summary>
+public interface IPlayFabAuthenticationApi
+{
+    Task<PlayFabResult<GetEntityTokenResponse>> GetEntityTokenAsync(PlayFabApiSettings settings);
 }
 
 /// <summary>
 /// Wrapper implementation for PlayFab authentication API.
 /// </summary>
-public class PlayFabAuthenticationApiWrapper(PlayFabApiSettings settings) : IPlayFabAuthenticationApi
+public class PlayFabAuthenticationApi : IPlayFabAuthenticationApi
 {
-    public Task<PlayFabResult<GetEntityTokenResponse>> GetEntityTokenAsync()
+    public Task<PlayFabResult<GetEntityTokenResponse>> GetEntityTokenAsync(PlayFabApiSettings settings)
     {
         return PlayFabAuthenticationAPI.GetEntityTokenAsync(new GetEntityTokenRequest(), settings);
-    }
-}
-
-/// <summary>
-/// Wrapper implementation for PlayFab multiplayer instance API.
-/// </summary>
-public class PlayFabMultiplayerInstanceApiWrapper(PlayFabApiSettings settings, PlayFabAuthenticationContext context)
-    : IPlayFabMultiplayerInstanceApi
-{
-    readonly PlayFabMultiplayerInstanceAPI _api = new(settings, context);
-
-    public Task<PlayFabResult<RequestMultiplayerServerResponse>> RequestMultiplayerServerAsync(RequestMultiplayerServerRequest request)
-    {
-        return _api.RequestMultiplayerServerAsync(request);
-    }
-
-    public Task<PlayFabResult<GetMultiplayerServerDetailsResponse>> GetMultiplayerServerDetailsAsync(GetMultiplayerServerDetailsRequest request)
-    {
-        return _api.GetMultiplayerServerDetailsAsync(request);
     }
 }
