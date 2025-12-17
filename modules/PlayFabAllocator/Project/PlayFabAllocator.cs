@@ -48,11 +48,10 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
 
     /// <summary>
     /// You will need to set up a secret in the <a
-    /// href="https://cloud.unity.com">Unity Dashboard</a>
-    /// with the <c>DEVELOPER_SECRET_KEY</c> key
-    /// containing your PlayFab Developer Secret Key.
+    /// href="https://cloud.unity.com">Unity Dashboard</a> with the
+    /// <c>PLAYFAB_SECRET_KEY</c> key containing your PlayFab Secret Key.
     /// </summary>
-    const string DeveloperSecretKey = "DEVELOPER_SECRET_KEY";
+    const string PlayFabSecretKeySecretName = "PLAYFAB_SECRET_KEY";
     const string AllocationUserFriendlyError = "An error occured when allocating.";
     const string PollUserFriendlyError = "An error occured when polling the server status.";
 
@@ -63,11 +62,11 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
     {
         try
         {
-            PlayFabSettings.staticSettings.DeveloperSecretKey = (await gameApiClient.SecretManager.GetSecret(context, DeveloperSecretKey)).Value;
+            PlayFabSettings.staticSettings.DeveloperSecretKey = (await gameApiClient.SecretManager.GetSecret(context, PlayFabSecretKeySecretName)).Value;
         }
         catch (Exception e)
         {
-            _logger.LogError(e, $"An error occured when retrieving secret for key '{DeveloperSecretKey}'.");
+            _logger.LogError(e, $"An error occured when retrieving secret for key '{PlayFabSecretKeySecretName}'.");
             return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
         }
 
@@ -154,11 +153,11 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
     {
         try
         {
-            PlayFabSettings.staticSettings.DeveloperSecretKey = (await gameApiClient.SecretManager.GetSecret(context, DeveloperSecretKey)).Value;
+            PlayFabSettings.staticSettings.DeveloperSecretKey = (await gameApiClient.SecretManager.GetSecret(context, PlayFabSecretKeySecretName)).Value;
         }
         catch (Exception e)
         {
-            const string error = $"An error occured when retrieving secret for key '{DeveloperSecretKey}'.";
+            const string error = $"An error occured when retrieving secret for key '{PlayFabSecretKeySecretName}'.";
             _logger.LogError(e, error);
             return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
         }
