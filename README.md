@@ -14,17 +14,29 @@ A collection of examples to connect Unity Matchmaker with various game server ho
 
 # Getting Started
 
-Select the hosting provider that you want to use under `modules/<provider_name>`
+Select the hosting provider that you want to use under `modules/<provider_name>`:
+- **GameLiftAllocator** - AWS GameLift integration
+- **MultiplayAllocator** - Unity Multiplay integration
+- **PlayfabAllocator** - Microsoft PlayFab integration
 
-Edit the module C# source files and update the required configuration variables.
+## 1. Configure the Module
+
+Each module contains a `CONFIGURATION.md` file with detailed instructions on updating the required C# constants:
+- [GameLiftAllocator/CONFIGURATION.md](modules/GameLiftAllocator/CONFIGURATION.md)
+- [MultiplayAllocator/CONFIGURATION.md](modules/MultiplayAllocator/CONFIGURATION.md)
+- [PlayfabAllocator/CONFIGURATION.md](modules/PlayfabAllocator/CONFIGURATION.md)
+
+## 2. Deploy the Module
 
 ```sh
-# will deploy remote config, matchmaker and cloud code files
+# will deploy cloud code module
 ugs deploy modules/<provider_name> 
 ```
 
-Navigate to the [Unity Dashboard](https://cloud.unity.com).
-- Add the required secrets to your project in the under `Administration -> Secrets`
+## 3. Configure Unity Dashboard
+
+Navigate to the [Unity Dashboard](https://cloud.unity.com):
+- Add the required secrets to your project under `Administration -> Secrets` (see module's CONFIGURATION.md)
 - Update your matchmaker to use the new cloud code based allocator under `Matchmaker -> Queues`
 
 # Converting to public repository
