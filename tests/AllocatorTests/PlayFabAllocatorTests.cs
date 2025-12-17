@@ -50,7 +50,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secret for key 'DEVELOPER_SECRET_KEY'."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secret for key 'PLAYFAB_SECRET_KEY'."));
             Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Error));
         }
     }
@@ -177,7 +177,7 @@ public class PlayFabAllocatorTests
                 }
             });
 
-        _multiplayerInstanceApiMock.Setup(m => m.RequestMultiplayerServerAsync(It.IsAny<RequestMultiplayerServerRequest>()))
+        _multiplayerInstanceApiMock.Setup(m => m.RequestMultiplayerServerAsync(It.IsAny<RequestMultiplayerServerRequest>(), null, null))
             .ReturnsAsync(allocationResult);
 
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
@@ -204,7 +204,7 @@ public class PlayFabAllocatorTests
                 }
             });
 
-        _multiplayerInstanceApiMock.Setup(m => m.RequestMultiplayerServerAsync(It.IsAny<RequestMultiplayerServerRequest>()))
+        _multiplayerInstanceApiMock.Setup(m => m.RequestMultiplayerServerAsync(It.IsAny<RequestMultiplayerServerRequest>(), null, null))
             .ReturnsAsync(new PlayFabResult<RequestMultiplayerServerResponse>
             {
                 Result = new RequestMultiplayerServerResponse
@@ -244,7 +244,7 @@ public class PlayFabAllocatorTests
                 }
             });
 
-        _multiplayerInstanceApiMock.Setup(m => m.RequestMultiplayerServerAsync(It.IsAny<RequestMultiplayerServerRequest>()))
+        _multiplayerInstanceApiMock.Setup(m => m.RequestMultiplayerServerAsync(It.IsAny<RequestMultiplayerServerRequest>(), null, null))
             .ReturnsAsync(new PlayFabResult<RequestMultiplayerServerResponse>
             {
                 Result = new RequestMultiplayerServerResponse
@@ -287,7 +287,7 @@ public class PlayFabAllocatorTests
                 }
             });
 
-        _multiplayerInstanceApiMock.Setup(m => m.RequestMultiplayerServerAsync(It.IsAny<RequestMultiplayerServerRequest>()))
+        _multiplayerInstanceApiMock.Setup(m => m.RequestMultiplayerServerAsync(It.IsAny<RequestMultiplayerServerRequest>(), null, null))
             .ReturnsAsync(new PlayFabResult<RequestMultiplayerServerResponse>
             {
                 Result = new RequestMultiplayerServerResponse
@@ -325,7 +325,7 @@ public class PlayFabAllocatorTests
                 }
             });
 
-        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId")))
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId"), null, null))
             .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
             {
                 Result = new GetMultiplayerServerDetailsResponse
@@ -371,7 +371,7 @@ public class PlayFabAllocatorTests
                 }
             });
 
-        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId")))
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId"), null, null))
             .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
             {
                 Result = new GetMultiplayerServerDetailsResponse
@@ -413,7 +413,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secret for key 'DEVELOPER_SECRET_KEY'."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secret for key 'PLAYFAB_SECRET_KEY'."));
             Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
         }
     }
@@ -487,7 +487,7 @@ public class PlayFabAllocatorTests
                 }
             });
 
-        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.IsAny<GetMultiplayerServerDetailsRequest>()))
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.IsAny<GetMultiplayerServerDetailsRequest>(), null, null))
             .ReturnsAsync(pollResult);
 
         var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",

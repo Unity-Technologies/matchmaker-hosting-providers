@@ -36,7 +36,7 @@ public class GameLiftAllocatorTests
     public async Task TestThatGameLiftCanAllocate()
     {
         _gameLiftMock.Reset();
-        _gameLiftMock.Setup(g => g.StartGameSessionPlacementAsync(It.IsAny<StartGameSessionPlacementRequest>()))
+        _gameLiftMock.Setup(g => g.StartGameSessionPlacementAsync(It.IsAny<StartGameSessionPlacementRequest>(), CancellationToken.None))
             .ReturnsAsync(new StartGameSessionPlacementResponse
             {
                 GameSessionPlacement = new GameSessionPlacement
@@ -59,7 +59,7 @@ public class GameLiftAllocatorTests
     public async Task TestThatGameLiftCanAllocateToRegions()
     {
         _gameLiftMock.Reset();
-        _gameLiftMock.Setup(g => g.StartGameSessionPlacementAsync(It.IsAny<StartGameSessionPlacementRequest>()))
+        _gameLiftMock.Setup(g => g.StartGameSessionPlacementAsync(It.IsAny<StartGameSessionPlacementRequest>(), CancellationToken.None))
             .ReturnsAsync(new StartGameSessionPlacementResponse
             {
                 GameSessionPlacement = new GameSessionPlacement
@@ -82,7 +82,7 @@ public class GameLiftAllocatorTests
     public async Task TestThatGameLiftCanPoll()
     {
         _gameLiftMock.Reset();
-        _gameLiftMock.Setup(g => g.DescribeGameSessionPlacementAsync(It.IsAny<DescribeGameSessionPlacementRequest>()))
+        _gameLiftMock.Setup(g => g.DescribeGameSessionPlacementAsync(It.IsAny<DescribeGameSessionPlacementRequest>(), CancellationToken.None))
             .ReturnsAsync(new DescribeGameSessionPlacementResponse()
             {
                 GameSessionPlacement = new GameSessionPlacement
