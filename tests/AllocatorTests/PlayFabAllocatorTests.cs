@@ -504,4 +504,239 @@ public class PlayFabAllocatorTests
             Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
         }
     }
+
+    [Test]
+    public async Task WillReturnPollStatusPendingWhenServerStateIsInitializing()
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
+            {
+                Result = new GetEntityTokenResponse
+                {
+                    EntityToken = "token",
+                    Entity = new EntityKey { Id = "entityId", Type = "entityType" }
+                }
+            });
+
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId"), null, null))
+            .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
+            {
+                Result = new GetMultiplayerServerDetailsResponse
+                {
+                    State = "Initializing"
+                }
+            });
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Pending));
+            Assert.That(poll.Message, Is.Null);
+            Assert.That(poll.AssignmentData, Is.Null);
+        }
+    }
+
+    [Test]
+    public async Task WillReturnPollStatusPendingWhenServerStateIsStandingBy()
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
+            {
+                Result = new GetEntityTokenResponse
+                {
+                    EntityToken = "token",
+                    Entity = new EntityKey { Id = "entityId", Type = "entityType" }
+                }
+            });
+
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId"), null, null))
+            .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
+            {
+                Result = new GetMultiplayerServerDetailsResponse
+                {
+                    State = "StandingBy"
+                }
+            });
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Pending));
+            Assert.That(poll.Message, Is.Null);
+            Assert.That(poll.AssignmentData, Is.Null);
+        }
+    }
+
+    [Test]
+    public async Task WillLogAndReturnPollErrorWhenServerStateIsTerminating()
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
+            {
+                Result = new GetEntityTokenResponse
+                {
+                    EntityToken = "token",
+                    Entity = new EntityKey { Id = "entityId", Type = "entityType" }
+                }
+            });
+
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId"), null, null))
+            .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
+            {
+                Result = new GetMultiplayerServerDetailsResponse
+                {
+                    State = "Terminating"
+                }
+            });
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
+            Assert.That(poll.Message, Is.EqualTo("The server is terminating."));
+        }
+    }
+
+    [Test]
+    public async Task WillLogAndReturnPollErrorWhenServerStateIsUnparseable()
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
+            {
+                Result = new GetEntityTokenResponse
+                {
+                    EntityToken = "token",
+                    Entity = new EntityKey { Id = "entityId", Type = "entityType" }
+                }
+            });
+
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId"), null, null))
+            .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
+            {
+                Result = new GetMultiplayerServerDetailsResponse
+                {
+                    State = "InvalidState",
+                    IPV4Address = "127.0.0.1",
+                    Ports = [new Port { Num = 1234 }]
+                }
+            });
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Does.Contain("parsing the server state"));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Does.Contain("InvalidState"));
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
+            Assert.That(poll.Message, Is.Not.Null);
+        }
+    }
+
+    [Test]
+    public async Task WillLogAndReturnPollErrorWhenPortsCollectionIsEmpty()
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
+            {
+                Result = new GetEntityTokenResponse
+                {
+                    EntityToken = "token",
+                    Entity = new EntityKey { Id = "entityId", Type = "entityType" }
+                }
+            });
+
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId"), null, null))
+            .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
+            {
+                Result = new GetMultiplayerServerDetailsResponse
+                {
+                    State = "Active",
+                    IPV4Address = "127.0.0.1",
+                    Ports = []
+                }
+            });
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Does.Contain("Details are malformed"));
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
+        }
+    }
+
+    [Test]
+    public async Task WillReturnFirstPortWhenMultiplePortsExist()
+    {
+        _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>()))
+            .ReturnsAsync(new PlayFabResult<GetEntityTokenResponse>
+            {
+                Result = new GetEntityTokenResponse
+                {
+                    EntityToken = "token",
+                    Entity = new EntityKey { Id = "entityId", Type = "entityType" }
+                }
+            });
+
+        _multiplayerInstanceApiMock.Setup(m => m.GetMultiplayerServerDetailsAsync(It.Is<GetMultiplayerServerDetailsRequest>(r => r.SessionId == "sessionId"), null, null))
+            .ReturnsAsync(new PlayFabResult<GetMultiplayerServerDetailsResponse>
+            {
+                Result = new GetMultiplayerServerDetailsResponse
+                {
+                    State = "Active",
+                    IPV4Address = "127.0.0.1",
+                    Ports = [new Port { Num = 7777 }, new Port { Num = 8888 }, new Port { Num = 9999 }]
+                }
+            });
+
+        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
+            new Dictionary<string, object>
+            {
+                { "sessionId", "sessionId" },
+                { "playfabRegion", "EastUs" }
+            }, DateTimeOffset.UtcNow));
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(poll.Status, Is.EqualTo(PollStatus.Allocated));
+            Assert.That(poll.AssignmentData, Is.Not.Null);
+        }
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(poll.AssignmentData!.Type, Is.EqualTo(AssignmentType.IpPort));
+            Assert.That(poll.AssignmentData.Ip, Is.EqualTo("127.0.0.1"));
+            Assert.That(poll.AssignmentData.Port, Is.EqualTo(7777));
+        }
+    }
 }

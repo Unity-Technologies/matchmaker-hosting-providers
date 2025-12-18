@@ -31,6 +31,14 @@ public class ModuleConfig : ICloudCodeSetup
 public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory playFabFactory, IPlayFabAuthenticationApi authenticationApi, ILogger<PlayFabAllocator> logger)
     : IMatchmakerAllocator
 {
+    enum GameServerState
+    {
+        Initializing = 0,
+        StandingBy = 1,
+        Active = 2,
+        Terminating = 3
+    }
+
     /// <summary>
     /// You will need to set up your PlayFab Build Id.
     /// </summary>
@@ -54,6 +62,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
     const string PlayFabSecretKeySecretName = "PLAYFAB_SECRET_KEY";
     const string AllocationUserFriendlyError = "An error occurred when allocating.";
     const string PollUserFriendlyError = "An error occurred when polling the server status.";
+    const string ServerIsTerminatingFriendlyError = "The server is terminating.";
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
@@ -204,25 +213,44 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
             var detailsResult =
                 await multiplayerInstanceApi.GetMultiplayerServerDetailsAsync(multiplayerServerDetailsRequest);
 
-            if (!IsValid(detailsResult))
+            if (detailsResult == null)
             {
+                logger.LogError($"An error occurred when calling {nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync)}. The result is null.");
                 return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
             }
 
-            switch (detailsResult.Result.State)
+            if (detailsResult.Result == null)
             {
-                case "StandingBy":
-                case "Initializing":
+                logger.LogError("An error occurred when calling {method}. Error: {error}.", nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync), SerializeToJson(detailsResult.Error));
+                return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
+            }
+
+            if (!Enum.TryParse<GameServerState>(detailsResult.Result.State, out var serverState))
+            {
+                logger.LogError("An error occurred when parsing the server state. Server state: {state}", detailsResult.Result.State);
+                return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
+            }
+
+            switch (serverState)
+            {
+                case GameServerState.Initializing:
+                case GameServerState.StandingBy:
                     return new PollResponse(PollStatus.Pending);
-                case "Active":
+                case GameServerState.Active:
+                    if (!IsValid(detailsResult))
+                    {
+                        return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
+                    }
                     return new PollResponse(PollStatus.Allocated)
                     {
                         AssignmentData = AssignmentData.IpPort(
                             detailsResult.Result.IPV4Address,
                             detailsResult.Result.Ports[0].Num)
                     };
+                case GameServerState.Terminating:
+                    return new PollResponse(PollStatus.Error) { Message = ServerIsTerminatingFriendlyError };
                 default:
-                    logger.LogError("An error occurred when polling the server status. Server state: {state}", detailsResult.Result.State);
+                    logger.LogError("An error occurred when polling the server status. Server state: {state}", serverState);
                     return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
             }
         }
@@ -233,56 +261,50 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         }
     }
 
-    bool IsValid(PlayFabResult<GetEntityTokenResponse> entityTokenRequestResult)
+    bool IsValid(PlayFabResult<GetEntityTokenResponse> result)
     {
-        switch (entityTokenRequestResult)
+        switch (result)
         {
             case null:
                 logger.LogError(
                     $"An error occurred when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}. The result is null.");
                 return false;
             case { Error: not null }:
-                logger.LogError("An error occurred when calling {method}. The result is null. Error: {error}.", nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync), SerializeToJson(entityTokenRequestResult.Error));
+                logger.LogError("An error occurred when calling {method}. The result is null. Error: {error}.", nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync), SerializeToJson(result.Error));
                 return false;
             case { Result: { EntityToken.Length: > 0, Entity: { Id.Length: > 0, Type.Length: > 0 } } }:
                 return true;
             default:
-                logger.LogError("An error occurred when calling {method}. The result is null. Token is malformed. Token: {result}.", nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync), SerializeToJson(entityTokenRequestResult.Result));
+                logger.LogError("An error occurred when calling {method}. The result is null. Token is malformed. Token: {result}.", nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync), SerializeToJson(result.Result));
                 return false;
         }
     }
 
-    bool IsValid(PlayFabResult<RequestMultiplayerServerResponse> requestMultiplayerServerResult)
+    bool IsValid(PlayFabResult<RequestMultiplayerServerResponse> result)
     {
-        switch (requestMultiplayerServerResult)
+        switch (result)
         {
             case null:
                 logger.LogError($"An error occurred when calling {nameof(PlayFabMultiplayerInstanceAPI.RequestMultiplayerServerAsync)}. The result is null.");
                 return false;
             case { Error: not null }:
-                logger.LogError("An error occurred when calling {method}. Error: {error}.", nameof(PlayFabMultiplayerInstanceAPI.RequestMultiplayerServerAsync), SerializeToJson(requestMultiplayerServerResult.Error));
+                logger.LogError("An error occurred when calling {method}. Error: {error}.", nameof(PlayFabMultiplayerInstanceAPI.RequestMultiplayerServerAsync), SerializeToJson(result.Error));
                 return false;
             default:
                 return true;
         }
     }
 
-    bool IsValid(PlayFabResult<GetMultiplayerServerDetailsResponse> getMultiplayerServerDetailsResult)
+    bool IsValid(PlayFabResult<GetMultiplayerServerDetailsResponse> result)
     {
-        switch (getMultiplayerServerDetailsResult)
+        switch (result)
         {
-            case null:
-                logger.LogError($"An error occurred when calling {nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync)}. The result is null.");
-                return false;
-            case { Error: not null }:
-                logger.LogError("An error occurred when calling {method}. Error: {error}.", nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync), SerializeToJson(getMultiplayerServerDetailsResult.Error));
-                return false;
             case { Result: { State.Length: > 0, IPV4Address.Length: > 0, Ports.Count: > 0 } }:
             {
                 return true;
             }
             default:
-                logger.LogError("An error occurred when calling {method}. Details are malformed. Details: {result}.", nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync), SerializeToJson(getMultiplayerServerDetailsResult.Result));
+                logger.LogError("An error occurred when calling {method}. Details are malformed. Details: {result}.", nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync), SerializeToJson(result.Result));
                 return false;
         }
     }
