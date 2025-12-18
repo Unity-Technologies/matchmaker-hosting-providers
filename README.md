@@ -1,52 +1,61 @@
-# Matchmaker Hosting Providers
+# Matchmaker hosting providers
 
 A collection of example integrations to connect Unity Matchmaker with various game server hosting providers.
 
-## Purpose and Scope
+## Purpose and scope
 
-This repository demonstrates how to integrate Unity Matchmaker with different game server hosting platforms through Cloud Code modules. You are responsible for:
+This repository demonstrates how to integrate [Unity Matchmaker](https://docs.unity.com/ugs/en-us/manual/matchmaker/manual/matchmaker-overview) with different game server hosting platforms using [Cloud Code modules](https://docs.unity.com/ugs/en-us/manual/cloud-code/manual). When using these examples, you're responsible for:
 
-- Testing and validating integrations for your specific use case
-- Securing your deployments and managing credentials
-- Complying with each hosting provider's terms of service
-- Maintaining and updating your implementations
+- Testing and validating integrations for your specific use case.
+- Securing your deployments and managing credentials.
+- Complying with each hosting provider's terms of service.
+- Maintaining and updating your implementations.
 
 ## Requirements
 
 - [Dotnet SDK](https://dotnet.microsoft.com/download)
 - [UGS CLI](https://services.docs.unity.com/guides/ugs-cli/latest/general/get-started/install-the-cli/)
-  - [Setup Project and Environment](https://services.docs.unity.com/guides/ugs-cli/latest/general/get-started/setup-a-common-configuration/)
+  - [Set up project and environment](https://services.docs.unity.com/guides/ugs-cli/latest/general/get-started/setup-a-common-configuration/)
   - [Authenticate](https://services.docs.unity.com/guides/ugs-cli/latest/general/get-started/get-authenticated/)
   - Make sure that your service account has the following project permissions:
     - `Unity Environments Viewer`
     - `Cloud Code Editor`
 
-## Getting Started
+## Getting started
 
 Select the hosting provider that you want to use under `modules/<provider_name>`:
+
 - **GameLiftAllocator** - AWS GameLift integration
 - **MultiplayAllocator** - Unity Multiplay integration
 - **PlayfabAllocator** - Microsoft PlayFab integration
 
-### 1. Configure the Module
+### Configure the module
 
 Each module contains a `CONFIGURATION.md` file with detailed instructions on updating the required C# constants:
+
 - [GameLiftAllocator/CONFIGURATION.md](modules/GameLiftAllocator/CONFIGURATION.md)
 - [MultiplayAllocator/CONFIGURATION.md](modules/MultiplayAllocator/CONFIGURATION.md)
 - [PlayfabAllocator/CONFIGURATION.md](modules/PlayfabAllocator/CONFIGURATION.md)
 
-### 2. Deploy the Module
+Once you've completed the configuration steps for your chosen provider, proceed to deploying the module.
+
+### Deploy the module
 
 ```sh
 # Deploy cloud code module for your chosen provider
 ugs deploy modules/<provider_name>
 ```
 
-### 3. Configure Unity Dashboard
+### Configure Unity Dashboard
 
 Navigate to the [Unity Dashboard](https://cloud.unity.com):
-- Add the required secrets to your project under `Administration -> Secrets` (see module's CONFIGURATION.md)
-- Update your matchmaker to use the new cloud code based allocator under `Matchmaker -> Queues`
+
+- Add the required secrets to your project under **Administration** > **Secrets** (refer to the respective module's `CONFIGURATION.md` for details)
+- Update your Matchmaker to use the new Cloud Code-based allocator under **Matchmaker** > **Queues**.
+
+## Troubleshooting
+
+If you have issues with the examples in this repository, refer to the documentation of your chosen hosting provider or seek help in the [Unity Discussions forums](https://discussions.unity.com/).
 
 ## Legal Notices
 
@@ -85,10 +94,10 @@ This repository references third-party SDKs and services. You are responsible fo
 - Managing third-party dependencies and updates
 - Understanding third-party attribution requirements
 
-See individual module documentation for specific SDK requirements and licensing information.
+Refer to individual module documentation for specific SDK requirements and licensing information.
 
 ## License
 
-This project is licensed under the Unity Companion License. See the [LICENSE.md](LICENSE.md) file for details.
+This project is licensed under the Unity Companion License. Refer to the [LICENSE.md](LICENSE.md) file for details.
 
 By using this software, you agree to the terms of the Unity Companion License, which permits use only in connection with the Unity game engine.
