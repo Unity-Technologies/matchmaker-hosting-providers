@@ -4,7 +4,7 @@
 
 Add this secret in the [Unity Dashboard](https://cloud.unity.com) under **Administration** > **Secrets**:
 
-- `DEVELOPER_SECRET_KEY` - Your PlayFab developer secret key
+- `PLAYFAB_SECRET_KEY` - Your PlayFab secret key
 
 Find this in the [PlayFab Dashboard](https://developer.playfab.com/) under **Settings** > **Secret Keys**.
 
