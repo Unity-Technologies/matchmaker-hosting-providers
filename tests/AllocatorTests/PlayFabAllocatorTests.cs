@@ -50,7 +50,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secret for key 'PLAYFAB_SECRET_KEY'."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occurred when retrieving secret for key 'PLAYFAB_SECRET_KEY'."));
             Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Error));
         }
     }
@@ -66,7 +66,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving the entity token."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occurred when retrieving the entity token."));
             Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Error));
         }
     }
@@ -79,7 +79,7 @@ public class PlayFabAllocatorTests
             {
                 Error = new PlayFabError { ErrorMessage = "Authentication failed" }
             },
-            "An error occured when calling");
+            "An error occurred when calling");
         yield return new TestCaseData(
             new PlayFabResult<GetEntityTokenResponse>
             {
@@ -159,7 +159,7 @@ public class PlayFabAllocatorTests
             {
                 Error = new PlayFabError { ErrorMessage = "Allocation failed" }
             },
-            "An error occured when calling");
+            "An error occurred when calling");
     }
 
     [TestCaseSource(nameof(InvalidAllocationResultTestCases))]
@@ -305,7 +305,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving the region in matchmaking properties. The region field must be non-empty."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occurred when retrieving the region in matchmaking properties. The region field must be non-empty."));
             Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Error));
             Assert.That(allocation.Message, Is.Not.Null);
             Assert.That(allocation.AllocationData, Is.Null);
@@ -413,7 +413,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving secret for key 'PLAYFAB_SECRET_KEY'."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occurred when retrieving secret for key 'PLAYFAB_SECRET_KEY'."));
             Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
         }
     }
@@ -433,7 +433,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occured when retrieving the entity token."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occurred when retrieving the entity token."));
             Assert.That(poll.Status, Is.EqualTo(PollStatus.Error));
         }
     }
@@ -469,7 +469,7 @@ public class PlayFabAllocatorTests
             {
                 Error = new PlayFabError { ErrorMessage = "Poll failed" }
             },
-            "An error occured when calling");
+            "An error occurred when calling");
     }
 
     [TestCaseSource(nameof(InvalidPollResultTestCases))]
