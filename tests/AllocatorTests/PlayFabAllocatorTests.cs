@@ -268,7 +268,7 @@ public class PlayFabAllocatorTests
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(allocation.AllocationData["playfabRegion"], Is.EqualTo("customRegion"));
+            Assert.That(allocation.AllocationData!["playfabRegion"], Is.EqualTo("customRegion"));
             Assert.That(allocation.AllocationData["sessionId"], Is.EqualTo("sessionId"));
             Assert.That(allocation.AllocationData["matchId"], Is.EqualTo("1234"));
         }
