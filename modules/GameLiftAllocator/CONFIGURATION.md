@@ -1,31 +1,34 @@
-# GameLift Allocator Configuration
+# GameLift allocator configuration
 
-## Required Secrets
+## Required secrets
 
-Add these secrets in [Unity Dashboard](https://cloud.unity.com) → Administration → Secrets:
+Add these secrets in the [Unity Dashboard](https://cloud.unity.com) under **Administration** > **Secrets**:
 
 - `AWS_ACCESS_KEY_ID` - Your AWS access key ID
 - `AWS_SECRET_ACCESS_KEY` - Your AWS secret access key
 
-Find these in [AWS IAM Console](https://console.aws.amazon.com/iam/) → Users → Security Credentials → Create Access Key.
+Find these in the [AWS IAM Console](https://console.aws.amazon.com/iam/) under **Users** > **Security Credentials** > **Create Access Key**.
 
-## Required Code Changes
+## Required code changes
 
 Edit `Project/GameLiftAllocator.cs` and update these constants:
 
-### GameSessionQueueName (Line 31)
+### GameSessionQueueName (line 31)
+
 ```csharp
 private const string GameSessionQueueName = "MyQueue"; // TODO: Replace with actual queue name
 ```
-Replace with your AWS GameLift queue name from the [GameLift Console](https://console.aws.amazon.com/gamelift/) → Queues.
+Replace with your AWS GameLift queue name from the [GameLift Console](https://console.aws.amazon.com/gamelift/) under **Queues**.
 
-### DefaultAwsRegion (Line 33) - Optional
+### DefaultAwsRegion (line 33) - optional
+
 ```csharp
 private const string DefaultAwsRegion = "eu-west-2";
 ```
 Valid values: `us-east-1`, `us-west-2`, `eu-west-1`, `eu-west-2`, `ap-southeast-1`, `ap-northeast-1`, etc.
 
-### DefaultMaximumPlayerSessionCount (Line 32) - Optional
+### DefaultMaximumPlayerSessionCount (line 32) - optional
+
 ```csharp
 private const int DefaultMaximumPlayerSessionCount = 10;
 ```
