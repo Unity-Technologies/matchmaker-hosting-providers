@@ -26,14 +26,14 @@ This repository demonstrates how to integrate Unity Matchmaker with different ga
 Select the hosting provider that you want to use under `modules/<provider_name>`:
 - **GameLiftAllocator** - AWS GameLift integration
 - **MultiplayAllocator** - Unity Multiplay integration
-- **PlayfabAllocator** - Microsoft PlayFab integration
+- **PlayFabAllocator** - Microsoft PlayFab integration
 
 ### 1. Configure the Module
 
 Each module contains a `CONFIGURATION.md` file with detailed instructions on updating the required C# constants:
 - [GameLiftAllocator/CONFIGURATION.md](modules/GameLiftAllocator/CONFIGURATION.md)
 - [MultiplayAllocator/CONFIGURATION.md](modules/MultiplayAllocator/CONFIGURATION.md)
-- [PlayfabAllocator/CONFIGURATION.md](modules/PlayfabAllocator/CONFIGURATION.md)
+- [PlayFabAllocator/CONFIGURATION.md](modules/PlayFabAllocator/CONFIGURATION.md)
 
 ### 2. Deploy the Module
 
