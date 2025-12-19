@@ -305,7 +305,7 @@ public class PlayFabAllocatorTests
         using (Assert.EnterMultipleScope())
         {
             Assert.That(_fakeLogger.Collector.LatestRecord.Level, Is.EqualTo(LogLevel.Error));
-            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occurred when retrieving the region in matchmaking properties. The region field must be non-empty."));
+            Assert.That(_fakeLogger.Collector.LatestRecord.Message, Is.EqualTo("An error occurred when retrieving the region in matchmaking properties. The region field must not be empty or whitespace."));
             Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Error));
             Assert.That(allocation.Message, Is.Not.Null);
             Assert.That(allocation.AllocationData, Is.Null);

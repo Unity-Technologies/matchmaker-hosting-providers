@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -73,7 +74,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         }
         catch (Exception e)
         {
-            logger.LogError(e, $"An error occurred when retrieving secret for key '{PlayFabSecretKeySecretName}'.");
+            logger.LogError(e, "An error occurred when retrieving secret for key '{secretName}'.", PlayFabSecretKeySecretName);
             return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
         }
 
@@ -95,8 +96,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         }
         catch (Exception e)
         {
-            const string error = "An error occurred when retrieving the entity token.";
-            logger.LogError(e, error);
+            logger.LogError(e, "An error occurred when retrieving the entity token.");
             return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
         }
 
@@ -112,11 +112,9 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
             var multiplayerInstanceApi = playFabFactory.CreateMultiplayerInstanceApi(playFabApiSettings, authenticationContext);
 
             var preferredRegion = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultPlayFabRegion;
-            if (preferredRegion is "")
+            if (string.IsNullOrWhiteSpace(preferredRegion))
             {
-                const string error =
-                    "An error occurred when retrieving the region in matchmaking properties. The region field must be non-empty.";
-                logger.LogError(error);
+                logger.LogError("An error occurred when retrieving the region in matchmaking properties. The region field must not be empty or whitespace.");
                 return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
             }
 
@@ -149,8 +147,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         }
         catch (Exception e)
         {
-            const string error = "An error occurred when allocating.";
-            logger.LogError(e, error);
+            logger.LogError(e, "An error occurred when allocating.");
             return new AllocateResponse(AllocateStatus.Error) { Message = AllocationUserFriendlyError };
         }
     }
@@ -164,8 +161,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         }
         catch (Exception e)
         {
-            const string error = $"An error occurred when retrieving secret for key '{PlayFabSecretKeySecretName}'.";
-            logger.LogError(e, error);
+            logger.LogError(e, $"An error occurred when retrieving secret for key '{PlayFabSecretKeySecretName}'.");
             return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
         }
 
@@ -187,8 +183,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         }
         catch (Exception e)
         {
-            const string error = "An error occurred when retrieving the entity token.";
-            logger.LogError(e, error);
+            logger.LogError(e, "An error occurred when retrieving the entity token.");
             return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
         }
 
@@ -213,16 +208,14 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
             var detailsResult =
                 await multiplayerInstanceApi.GetMultiplayerServerDetailsAsync(multiplayerServerDetailsRequest);
 
-            if (detailsResult == null)
+            switch (detailsResult)
             {
-                logger.LogError($"An error occurred when calling {nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync)}. The result is null.");
-                return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
-            }
-
-            if (detailsResult.Result == null)
-            {
-                logger.LogError("An error occurred when calling {method}. Error: {error}.", nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync), SerializeToJson(detailsResult.Error));
-                return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
+                case null:
+                    logger.LogError("An error occurred when calling {method}. The result is null.", nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync));
+                    return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
+                case { Result: null }:
+                    logger.LogError("An error occurred when calling {method}. Error: {error}.", nameof(PlayFabMultiplayerInstanceAPI.GetMultiplayerServerDetailsAsync), SerializeToJson(detailsResult.Error));
+                    return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
             }
 
             if (!Enum.TryParse<GameServerState>(detailsResult.Result.State, out var serverState))
@@ -250,8 +243,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
                 case GameServerState.Terminating:
                     return new PollResponse(PollStatus.Error) { Message = ServerIsTerminatingFriendlyError };
                 default:
-                    logger.LogError("An error occurred when polling the server status. Server state: {state}", serverState);
-                    return new PollResponse(PollStatus.Error) { Message = PollUserFriendlyError };
+                    throw new InvalidEnumArgumentException(nameof(serverState), (int)serverState, typeof(GameServerState));
             }
         }
         catch (Exception e)
@@ -267,7 +259,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         {
             case null:
                 logger.LogError(
-                    $"An error occurred when calling {nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync)}. The result is null.");
+                    "An error occurred when calling {method}. The result is null.", nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync));
                 return false;
             case { Error: not null }:
                 logger.LogError("An error occurred when calling {method}. The result is null. Error: {error}.", nameof(PlayFabAuthenticationAPI.GetEntityTokenAsync), SerializeToJson(result.Error));
@@ -285,13 +277,15 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
         switch (result)
         {
             case null:
-                logger.LogError($"An error occurred when calling {nameof(PlayFabMultiplayerInstanceAPI.RequestMultiplayerServerAsync)}. The result is null.");
+                logger.LogError("An error occurred when calling {method}. The result is null.", nameof(PlayFabMultiplayerInstanceAPI.RequestMultiplayerServerAsync));
                 return false;
             case { Error: not null }:
                 logger.LogError("An error occurred when calling {method}. Error: {error}.", nameof(PlayFabMultiplayerInstanceAPI.RequestMultiplayerServerAsync), SerializeToJson(result.Error));
                 return false;
-            default:
+            case { Result.SessionId.Length: > 0 }:
                 return true;
+            default:
+                return false;
         }
     }
 
