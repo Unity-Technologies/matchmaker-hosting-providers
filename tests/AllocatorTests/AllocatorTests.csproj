@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\modules\AgonesAllocator\Project\AgonesAllocator.csproj" />
         <ProjectReference Include="..\..\modules\MultiplayAllocator\Project\MultiplayAllocator.csproj"/>
         <ProjectReference Include="..\..\modules\GameLiftAllocator\Project\GameLiftAllocator.csproj"/>
         <ProjectReference Include="..\..\modules\PlayFabAllocator\Project\PlayFabAllocator.csproj"/>

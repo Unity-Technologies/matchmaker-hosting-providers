@@ -1,0 +1,14 @@
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/AllocationResponseCounterStatus/properties/count - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/AllocationResponseCounterStatus/properties/capacity - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/AllocationResponseListStatus/properties/capacity - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationCounterAction/properties/amount - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationCounterAction/properties/capacity - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationCounterSelector/properties/minCount - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationCounterSelector/properties/maxCount - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationCounterSelector/properties/minAvailable - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationCounterSelector/properties/maxAvailable - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationListAction/properties/capacity - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationListSelector/properties/minAvailable - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationListSelector/properties/maxAvailable - The format int64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationPlayerSelector/properties/minAvailable - The format uint64 is not supported by Kiota for the type String and the string type will be used.
+Warning: KiotaBuilder OpenAPI warning: #/components/schemas/allocationPlayerSelector/properties/maxAvailable - The format uint64 is not supported by Kiota for the type String and the string type will be used.

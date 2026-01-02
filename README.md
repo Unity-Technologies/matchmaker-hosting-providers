@@ -25,6 +25,7 @@ This repository demonstrates how to integrate [Unity Matchmaker](https://docs.un
 
 Select the hosting provider that you want to use under `modules/<provider_name>`:
 
+- **AgonesAllocator** - Agones integration
 - **GameLiftAllocator** - AWS GameLift integration
 - **MultiplayAllocator** - Unity Multiplay integration
 - **PlayFabAllocator** - Microsoft PlayFab integration
@@ -33,6 +34,7 @@ Select the hosting provider that you want to use under `modules/<provider_name>`
 
 Each module contains a `CONFIGURATION.md` file with detailed instructions on updating the required C# constants:
 
+- [AgonesAllocator/CONFIGURATION.md](modules/AgonesAllocator/CONFIGURATION.md)
 - [GameLiftAllocator/CONFIGURATION.md](modules/GameLiftAllocator/CONFIGURATION.md)
 - [MultiplayAllocator/CONFIGURATION.md](modules/MultiplayAllocator/CONFIGURATION.md)
 - [PlayFabAllocator/CONFIGURATION.md](modules/PlayFabAllocator/CONFIGURATION.md)
@@ -79,6 +81,7 @@ Provider names are used in a descriptive, nominative manner to identify the inte
 
 All product names, logos, brands, trademarks, and registered trademarks are property of their respective owners. All company, product, and service names used in this repository are for identification purposes only.
 
+- **Agones** is a trademark of Google LLC
 - **Amazon GameLift** is a trademark of Amazon.com, Inc. or its affiliates
 - **Microsoft PlayFab** is a trademark of Microsoft Corporation
 - **Unity** and **Unity Multiplay** are trademarks of Unity Technologies ApS

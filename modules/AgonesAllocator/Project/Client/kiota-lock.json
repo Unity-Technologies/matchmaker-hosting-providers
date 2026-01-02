@@ -1,0 +1,34 @@
+{
+  "descriptionHash": "53F7EE30E0F997C263AB92C2EBA6D56399D18A298A0766D5F11C46418971189871A4CC6BF7579D34F51ECA1294838D1C12C7451AAEE2DFAFE6C00DB6B15B3401",
+  "descriptionLocation": "../allocation.swagger.json",
+  "lockFileVersion": "1.0.0",
+  "kiotaVersion": "1.29.0",
+  "clientClassName": "AgonesClient",
+  "typeAccessModifier": "Public",
+  "clientNamespaceName": "AgonesAllocatorModule.Client",
+  "language": "CSharp",
+  "usesBackingStore": false,
+  "excludeBackwardCompatible": false,
+  "includeAdditionalData": true,
+  "disableSSLValidation": false,
+  "serializers": [
+    "Microsoft.Kiota.Serialization.Json.JsonSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Text.TextSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Form.FormSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Multipart.MultipartSerializationWriterFactory"
+  ],
+  "deserializers": [
+    "Microsoft.Kiota.Serialization.Json.JsonParseNodeFactory",
+    "Microsoft.Kiota.Serialization.Text.TextParseNodeFactory",
+    "Microsoft.Kiota.Serialization.Form.FormParseNodeFactory"
+  ],
+  "structuredMimeTypes": [
+    "application/json",
+    "text/plain;q=0.9",
+    "application/x-www-form-urlencoded;q=0.2",
+    "multipart/form-data;q=0.1"
+  ],
+  "includePatterns": [],
+  "excludePatterns": [],
+  "disabledValidationRules": []
+}
