@@ -29,7 +29,7 @@ Replace `AnonymousAuthenticationProvider` with your preferred authentication met
 - Bearer token authentication
 - Custom authentication provider
 
-Refer to the [Agones Allocator Service security documentation](https://agones.dev/site/docs/advanced/allocator-service/#configuration) for authentication options.
+Refer to the [Agones Allocator Service documentation](https://agones.dev/site/docs/advanced/allocator-service/) for authentication options.
 
 ### Allocation Request Configuration (line 41) - optional
 
