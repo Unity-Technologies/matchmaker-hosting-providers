@@ -91,7 +91,7 @@ Use of these names does not imply any affiliation with or endorsement by the tra
 
 ### Third-Party Dependencies
 
-This repository references third-party SDKs and services. You are responsible for:
+This repository references third-party SDKs and services. You're responsible for:
 - Complying with all third-party license terms
 - Reviewing and accepting third-party service agreements
 - Managing third-party dependencies and updates
