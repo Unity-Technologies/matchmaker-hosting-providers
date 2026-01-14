@@ -55,6 +55,10 @@ Navigate to the [Unity Dashboard](https://cloud.unity.com):
 - Add the required secrets to your project under **Administration** > **Secrets** (refer to the respective module's `CONFIGURATION.md` for details)
 - Update your Matchmaker to use the new Cloud Code-based allocator under **Matchmaker** > **Queues**.
 
+## Maintenance and Support
+
+This repository contains example code for educational and reference purposes. Unity will review updates to this repo but will not guarantee response times for issues or pull requests.
+
 ## Troubleshooting
 
 If you have issues with the examples in this repository, refer to the documentation of your chosen hosting provider or seek help in the [Unity Discussions forums](https://discussions.unity.com/).
