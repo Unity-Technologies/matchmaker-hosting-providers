@@ -45,7 +45,7 @@ public class PlayFabAllocatorTests
             .ThrowsAsync(new Exception("Secret not found."));
 
          var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new Dictionary<string, object>())));
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new Dictionary<string, object>())));
 
         using (Assert.EnterMultipleScope())
         {
@@ -61,7 +61,7 @@ public class PlayFabAllocatorTests
         _authenticationApiMock.Setup(a => a.GetEntityTokenAsync(It.IsAny<PlayFabApiSettings>())).Throws<Exception>();
 
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new Dictionary<string, object>())));
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new Dictionary<string, object>())));
 
         using (Assert.EnterMultipleScope())
         {
@@ -141,7 +141,7 @@ public class PlayFabAllocatorTests
             .ReturnsAsync(tokenResponse);
 
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new Dictionary<string, object>())));
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new Dictionary<string, object>())));
 
         using (Assert.EnterMultipleScope())
         {
@@ -181,7 +181,7 @@ public class PlayFabAllocatorTests
             .ReturnsAsync(allocationResult);
 
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new Dictionary<string, object>())));
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new Dictionary<string, object>())));
 
         using (Assert.EnterMultipleScope())
         {
@@ -214,7 +214,7 @@ public class PlayFabAllocatorTests
             });
 
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new Dictionary<string, object>())));
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new Dictionary<string, object>())));
 
         using (Assert.EnterMultipleScope())
         {
@@ -254,7 +254,7 @@ public class PlayFabAllocatorTests
             });
 
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new Dictionary<string, object>
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new Dictionary<string, object>
             {
                 { "region", "customRegion" }
             })));
@@ -297,7 +297,7 @@ public class PlayFabAllocatorTests
             });
 
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new Dictionary<string, object>
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new Dictionary<string, object>
             {
                 { "region", string.Empty }
             })));
