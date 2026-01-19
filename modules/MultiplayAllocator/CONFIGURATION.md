@@ -22,7 +22,7 @@ Replace with your Unity Multiplay fleet ID from the [Unity Dashboard](https://cl
 private const int BuildConfigId = 0;
 ```
 
-Replace with your build configuration ID from Multiplay under **Builds**.
+Replace with your build configuration ID from Multiplay under **Build Configurations**.
 
 ### DefaultRegion (line 27)
 
