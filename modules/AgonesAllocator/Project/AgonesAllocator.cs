@@ -22,7 +22,7 @@ public class AgonesAllocator(ILogger<AgonesAllocator> logger) : IMatchmakerAlloc
     /// This is typically the external IP/hostname of your allocator service.
     /// Example: "https://your-allocator-ip" or "https://allocator.your-domain.com"
     /// </summary>
-    private const string AllocatorServiceUrl = "https://136.118.184.165";
+    private const string AllocatorServiceUrl = "https://YOUR_ALLOCATOR_IP_OR_HOSTNAME";
     
     /// <summary>
     /// The Kubernetes namespace where your Agones fleet is deployed.
@@ -34,7 +34,7 @@ public class AgonesAllocator(ILogger<AgonesAllocator> logger) : IMatchmakerAlloc
     /// The name of your Agones fleet to allocate game servers from.
     /// This should match the metadata.name of your Fleet resource in Kubernetes.
     /// </summary>
-    private const string FleetName = "matchmaker-agones-fleet";
+    private const string FleetName = "YOUR_FLEET_NAME";
     
     /// <summary>
     /// Set to true if your allocator uses a self-signed certificate.
