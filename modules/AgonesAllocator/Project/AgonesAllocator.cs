@@ -1,100 +1,159 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
-using AgonesAllocatorModule.Client;
-using AgonesAllocatorModule.Client.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Kiota.Abstractions;
-using Microsoft.Kiota.Abstractions.Authentication;
-using Microsoft.Kiota.Http.HttpClientLibrary;
 using Unity.Services.CloudCode.Apis.Matchmaker;
 using Unity.Services.CloudCode.Core;
 
 namespace AgonesAllocatorModule;
 
 /// <summary>
-/// Module configuration for dependency injection.
-/// Registers IRequestAdapter
+/// Allocator for Agones game server allocation.
 /// </summary>
-public class ModuleConfig : ICloudCodeSetup
+public class AgonesAllocator(ILogger<AgonesAllocator> logger) : IMatchmakerAllocator
 {
-    // Configuration - users should modify these constants for their setup
-    private const string AllocatorServiceBaseUrl = "AGONES_BASE_URL"; // TODO: Replace with Agones Allocator Service URL
-
-    public void Setup(ICloudCodeConfig config)
-    {
-        config.Dependencies.AddScoped<IRequestAdapter>(_ =>
-        {
-            // TODO: Replace with required auth of your service
-            var authProvider = new AnonymousAuthenticationProvider();
-
-            return new HttpClientRequestAdapter(authProvider)
-            {
-                BaseUrl = AllocatorServiceBaseUrl
-            };
-        });
-    }
-}
-
-/// <summary>
-/// Allocator for Agones.
-/// </summary>
-public class AgonesAllocator(IRequestAdapter requestAdapter, ILogger<AgonesAllocator> logger) : IMatchmakerAllocator
-{
+    // =============================================================================
+    // TODO: Configure these values for your Agones setup
+    // =============================================================================
+    
+    /// <summary>
+    /// The base URL of your Agones Allocator Service.
+    /// This is typically the external IP/hostname of your allocator service.
+    /// Example: "https://your-allocator-ip" or "https://allocator.your-domain.com"
+    /// </summary>
+    private const string AllocatorServiceUrl = "https://136.118.184.165";
+    
+    /// <summary>
+    /// The Kubernetes namespace where your Agones fleet is deployed.
+    /// Default is "default" but you may have a custom namespace.
+    /// </summary>
+    private const string AgonesNamespace = "default";
+    
+    /// <summary>
+    /// The name of your Agones fleet to allocate game servers from.
+    /// This should match the metadata.name of your Fleet resource in Kubernetes.
+    /// </summary>
+    private const string FleetName = "matchmaker-agones-fleet";
+    
+    /// <summary>
+    /// Set to true if your allocator uses a self-signed certificate.
+    /// Set to false for production environments with valid SSL certificates.
+    /// </summary>
+    private const bool BypassSslValidation = true;
+    
+    /// <summary>
+    /// Timeout for allocation requests in seconds.
+    /// </summary>
+    private const int RequestTimeoutSeconds = 30;
+    
+    // =============================================================================
+    // End of configuration
+    // =============================================================================
 
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
-        var client = new AgonesClient(requestAdapter);
-
         try
         {
-            var allocation = await client.Gameserverallocation.PostAsync(new AllocationAllocationRequest
+            var handler = new HttpClientHandler();
+            if (BypassSslValidation)
             {
-                // TODO: Add allocation selectors as needed
-            });
-
-            var ip = allocation?.Addresses?.FirstOrDefault()?.Address;
-            var port = allocation?.Ports?.FirstOrDefault()?.Port;
-
-            if (ip == null || port == null)
+                // TODO: For production, use a valid SSL certificate instead of bypassing validation
+                handler.ServerCertificateCustomValidationCallback = (m, c, ch, e) => true;
+            }
+            
+            var httpClient = new HttpClient(handler)
             {
-                logger.LogError("Allocation did not return a valid IP or Port");
+                Timeout = TimeSpan.FromSeconds(RequestTimeoutSeconds)
+            };
+            
+            // Build allocation request payload
+            // TODO: Customize the gameServerSelectors to match your fleet labels
+            // You can add multiple selectors or change the match criteria as needed
+            // See: https://agones.dev/site/docs/reference/gameserverallocation/
+            var payload = new StringContent(
+                $"{{\"namespace\":\"{AgonesNamespace}\",\"gameServerSelectors\":[{{\"matchLabels\":{{\"agones.dev/fleet\":\"{FleetName}\"}}}}]}}",
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+            
+            var response = await httpClient.PostAsync($"{AllocatorServiceUrl}/gameserverallocation", payload);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogError("Allocation failed with status {StatusCode}: {Response}", 
+                    (int)response.StatusCode, responseBody);
+                return new AllocateResponse(AllocateStatus.Error)
+                {
+                    Message = $"Allocation failed: {response.StatusCode} - {responseBody}"
+                };
+            }
+            
+            // Parse the allocation response
+            var jsonDoc = System.Text.Json.JsonDocument.Parse(responseBody);
+            var root = jsonDoc.RootElement;
+            
+            string ip = null;
+            int? port = null;
+            
+            if (root.TryGetProperty("address", out var addressProp))
+            {
+                ip = addressProp.GetString();
+            }
+            if (root.TryGetProperty("ports", out var portsProp) && portsProp.GetArrayLength() > 0)
+            {
+                port = portsProp[0].GetProperty("port").GetInt32();
+            }
+            
+            if (string.IsNullOrEmpty(ip) || !port.HasValue)
+            {
+                logger.LogError("Allocation did not return a valid IP or Port. Response: {Response}", responseBody);
                 return new AllocateResponse(AllocateStatus.Error)
                 {
                     Message = "Allocation did not return a valid IP or Port"
                 };
             }
-
+            
+            logger.LogInformation("Successfully allocated game server at {IP}:{Port}", ip, port.Value);
+            
             return new AllocateResponse(AllocateStatus.Created)
             {
                 AllocationData = new Dictionary<string, object>
                 {
                     { "ip", ip },
-                    { "port", port }
+                    { "port", port.Value }
                 }
+            };
+        }
+        catch (TaskCanceledException)
+        {
+            logger.LogError("Allocation request timed out after {Timeout} seconds", RequestTimeoutSeconds);
+            return new AllocateResponse(AllocateStatus.Error)
+            {
+                Message = $"Allocation request timed out after {RequestTimeoutSeconds} seconds"
             };
         }
         catch (Exception e)
         {
             logger.LogError(e, "Error creating Agones allocation");
-
             return new AllocateResponse(AllocateStatus.Error)
             {
-                Message = $"Error creating Agones allocation: {e}"
+                Message = $"Error creating Agones allocation: {e.Message}"
             };
         }
-
     }
 
     [CloudCodeFunction("Matchmaker_PollAllocation")]
     public Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
+        var ip = (string)request.AllocationData["ip"];
+        var port = Convert.ToInt32(request.AllocationData["port"]);
+        
         return Task.FromResult(new PollResponse(PollStatus.Allocated)
         {
-            AssignmentData = AssignmentData.IpPort((string)request.AllocationData["ip"], (int)request.AllocationData["port"])
+            AssignmentData = AssignmentData.IpPort(ip, port)
         });
     }
 }
