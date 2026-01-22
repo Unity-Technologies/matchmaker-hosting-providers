@@ -59,7 +59,6 @@ public class AgonesAllocator(ILogger<AgonesAllocator> logger) : IMatchmakerAlloc
             var handler = new HttpClientHandler();
             if (BypassSslValidation)
             {
-                // TODO: For production, use a valid SSL certificate instead of bypassing validation
                 handler.ServerCertificateCustomValidationCallback = (m, c, ch, e) => true;
             }
             
