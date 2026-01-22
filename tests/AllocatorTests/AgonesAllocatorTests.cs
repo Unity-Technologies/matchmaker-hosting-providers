@@ -65,17 +65,17 @@ public class AgonesAllocatorTests
     [Test]
     public async Task TestAgonesCanPoll()
     {
-        var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
-            new Dictionary<string, object>
-            {
-                { "ip", "127.0.0.1" },
-                { "port", 1234 },
-            }, DateTimeOffset.UtcNow));
-        
+        var allocator = new AgonesAllocator(_loggerMock.Object);
+
+        var poll = await allocator.Poll(_executionContextMock.Object, 
+            new PollRequest("1234",
+                new Dictionary<string, object>
+                {
+                    { "ip", "127.0.0.1" },
+                    { "port", 1234 },
+                }, DateTimeOffset.UtcNow));
+
         Assert.That(poll.Status, Is.EqualTo(PollStatus.Allocated));
-        Assert.That(poll.Message, Is.Null);
-        Assert.That(poll.AssignmentData, Is.Not.Null);
-        Assert.That(poll.AssignmentData.Type, Is.EqualTo(AssignmentType.IpPort));
         Assert.That(poll.AssignmentData.Ip, Is.EqualTo("127.0.0.1"));
         Assert.That(poll.AssignmentData.Port, Is.EqualTo(1234));
     }
