@@ -18,10 +18,18 @@ Replace with your Agones Allocator Service URL. This should be the base URL of y
 
 Find this URL from your Agones installation. Refer to the [Agones Allocator Service documentation](https://agones.dev/site/docs/advanced/allocator-service/) for setup instructions.
 
-### Authentication Provider (line 31) - recommended for production
+### Authentication Provider (line 31 & line 36) - recommended for production
 
 ```csharp
 var authProvider = new AnonymousAuthenticationProvider(); // TODO: Replace with required auth of your service
+```
+
+```csharp
+var handler = new HttpClientHandler
+{
+    // TODO: Implement MTLS or other cert validation here
+    // ServerCertificateCustomValidationCallback = (_, _, _, _) => throw new NotImplementedException()
+};
 ```
 
 Replace `AnonymousAuthenticationProvider` with your preferred authentication method. For production deployments, consider using:
@@ -31,7 +39,7 @@ Replace `AnonymousAuthenticationProvider` with your preferred authentication met
 
 Refer to the [Agones Allocator Service documentation](https://agones.dev/site/docs/advanced/allocator-service/) for authentication options.
 
-### Allocation Request Configuration (line 41) - optional
+### Allocation Request Configuration (line 68) - optional
 
 ```csharp
 var allocation = await client.Gameserverallocation.PostAsync(new AllocationAllocationRequest
