@@ -28,6 +28,16 @@ public class AgonesAllocatorTests
     [Test]
     public async Task TestAgonesCanAllocate()
     {
+        var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new())));
+        
+        Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Created));
+        Assert.That(allocation.Message, Is.Null);
+    }
+    
+    [Test]
+    public async Task TestAgonesCanPoll()
+    {
         _requestAdapterMock.Reset();
         _requestAdapterMock.Setup(s => s.SerializationWriterFactory.GetSerializationWriter("application/json"))
             .Returns(new JsonSerializationWriter());
@@ -52,25 +62,8 @@ public class AgonesAllocatorTests
                 }
             });
         
-        var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new())));
-        
-        Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Created));
-        Assert.That(allocation.Message, Is.Null);
-        Assert.That(allocation.AllocationData, Is.Not.Null);
-        Assert.That(allocation.AllocationData["ip"], Is.EqualTo("127.0.0.1"));
-        Assert.That(allocation.AllocationData["port"], Is.EqualTo(1234));
-    }
-    
-    [Test]
-    public async Task TestAgonesCanPoll()
-    {
         var poll = await _allocator.Poll(_executionContextMock.Object, new PollRequest("1234",
-            new Dictionary<string, object>
-            {
-                { "ip", "127.0.0.1" },
-                { "port", 1234 },
-            }, DateTimeOffset.UtcNow));
+            new Dictionary<string, object>(), DateTimeOffset.UtcNow));
         
         Assert.That(poll.Status, Is.EqualTo(PollStatus.Allocated));
         Assert.That(poll.Message, Is.Null);

@@ -50,9 +50,14 @@ public class ModuleConfig : ICloudCodeSetup
 /// </summary>
 public class AgonesAllocator(IRequestAdapter requestAdapter, ILogger<AgonesAllocator> logger) : IMatchmakerAllocator
 {
-
     [CloudCodeFunction("Matchmaker_AllocateServer")]
-    public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
+    public Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
+    {
+        return Task.FromResult(new AllocateResponse(AllocateStatus.Created));
+    }
+
+    [CloudCodeFunction("Matchmaker_PollAllocation")]
+    public async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var client = new AgonesClient(requestAdapter);
 
@@ -69,39 +74,41 @@ public class AgonesAllocator(IRequestAdapter requestAdapter, ILogger<AgonesAlloc
             if (ip == null || port == null)
             {
                 logger.LogError("Allocation did not return a valid IP or Port");
-                return new AllocateResponse(AllocateStatus.Error)
+                return new PollResponse(PollStatus.Error)
                 {
                     Message = "Allocation did not return a valid IP or Port"
                 };
             }
 
-            return new AllocateResponse(AllocateStatus.Created)
+            return new PollResponse(PollStatus.Allocated)
             {
-                AllocationData = new Dictionary<string, object>
-                {
-                    { "ip", ip },
-                    { "port", port }
-                }
+                AssignmentData = AssignmentData.IpPort(ip, port ?? 0)
             };
+        }
+        catch (ApiException e)
+        {
+            // Agones was unable to allocate a server but might succeed in the future
+            // Wait for the next poll to retry
+            if (e.ResponseStatusCode == 429)
+            {
+                logger.LogWarning(e, "Error creating Agones allocation");
+                return new PollResponse(PollStatus.Pending);
+            }
+
+            return HandlePollError(e);
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Error creating Agones allocation");
-
-            return new AllocateResponse(AllocateStatus.Error)
-            {
-                Message = $"Error creating Agones allocation: {e}"
-            };
+            return HandlePollError(e);
         }
-
     }
 
-    [CloudCodeFunction("Matchmaker_PollAllocation")]
-    public Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
+    private PollResponse HandlePollError(Exception e)
     {
-        return Task.FromResult(new PollResponse(PollStatus.Allocated)
+        logger.LogError(e, "Error creating Agones allocation");
+        return new PollResponse(PollStatus.Error)
         {
-            AssignmentData = AssignmentData.IpPort((string)request.AllocationData["ip"], Convert.ToInt32(request.AllocationData["port"]))
-        });
+            Message = $"Error creating Agones allocation: {e}"
+        };
     }
 }
