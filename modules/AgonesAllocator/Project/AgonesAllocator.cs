@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using AgonesAllocatorModule.Client;
 using AgonesAllocatorModule.Client.Models;
@@ -30,7 +31,13 @@ public class ModuleConfig : ICloudCodeSetup
             // TODO: Replace with required auth of your service
             var authProvider = new AnonymousAuthenticationProvider();
 
-            return new HttpClientRequestAdapter(authProvider)
+            var handler = new HttpClientHandler
+            {
+                // TODO: Implement MTLS or other cert validation here
+                // ServerCertificateCustomValidationCallback = (_, _, _, _) => throw new NotImplementedException()
+            };
+            
+            return new HttpClientRequestAdapter(authProvider, httpClient: new HttpClient(handler))
             {
                 BaseUrl = AllocatorServiceBaseUrl
             };
@@ -94,7 +101,7 @@ public class AgonesAllocator(IRequestAdapter requestAdapter, ILogger<AgonesAlloc
     {
         return Task.FromResult(new PollResponse(PollStatus.Allocated)
         {
-            AssignmentData = AssignmentData.IpPort((string)request.AllocationData["ip"], (int)request.AllocationData["port"])
+            AssignmentData = AssignmentData.IpPort((string)request.AllocationData["ip"], Convert.ToInt32(request.AllocationData["port"]))
         });
     }
 }
