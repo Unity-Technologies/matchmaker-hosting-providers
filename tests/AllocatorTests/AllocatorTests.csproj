@@ -24,5 +24,6 @@
         <ProjectReference Include="..\..\modules\MultiplayAllocator\Project\MultiplayAllocator.csproj"/>
         <ProjectReference Include="..\..\modules\GameLiftAllocator\Project\GameLiftAllocator.csproj"/>
         <ProjectReference Include="..\..\modules\PlayFabAllocator\Project\PlayFabAllocator.csproj"/>
+        <ProjectReference Include="..\..\modules\EdgegapAllocator\Project\EdgegapAllocator.csproj"/>
     </ItemGroup>
 </Project>
