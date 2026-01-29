@@ -4,4 +4,5 @@
   <Project Path="modules/MultiplayAllocator/Project/MultiplayAllocator.csproj" />
   <Project Path="modules/PlayfabAllocator/Project/PlayFabAllocator.csproj" />
   <Project Path="modules/AgonesAllocator/Project/AgonesAllocator.csproj" />
+  <Project Path="modules/EdgegapAllocator/Project/EdgegapAllocator.csproj" />
 </Solution>

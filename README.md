@@ -29,6 +29,7 @@ Select the hosting provider that you want to use under `modules/<provider_name>`
 - **GameLiftAllocator** - AWS GameLift integration
 - **MultiplayAllocator** - Unity Multiplay integration
 - **PlayFabAllocator** - Microsoft PlayFab integration
+- **EdgegapAllocator** - Edgegap integration
 
 ### Configure the module
 
@@ -38,6 +39,7 @@ Each module contains a `CONFIGURATION.md` file with detailed instructions on upd
 - [GameLiftAllocator/CONFIGURATION.md](modules/GameLiftAllocator/CONFIGURATION.md)
 - [MultiplayAllocator/CONFIGURATION.md](modules/MultiplayAllocator/CONFIGURATION.md)
 - [PlayFabAllocator/CONFIGURATION.md](modules/PlayFabAllocator/CONFIGURATION.md)
+- [EdgegapAllocator/CONFIGURATION.md](modules/EdgegapAllocator/CONFIGURATION.md)
 
 Once you've completed the configuration steps for your chosen provider, proceed to deploying the module.
 
