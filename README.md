@@ -23,7 +23,9 @@ This repository demonstrates how to integrate [Unity Matchmaker](https://docs.un
 
 ## Getting started
 
-Select the hosting provider that you want to use under `modules/<provider_name>`:
+First of all you should clone this repository *separately from your Unity project* using your favority Git client (this is not a package that can be installed from within Unity).
+
+Then select the hosting provider that you want to use under `modules/<provider_name>`:
 
 - **AgonesAllocator** - Agones integration
 - **GameLiftAllocator** - AWS GameLift integration
