@@ -46,7 +46,7 @@ Once you've completed the configuration steps for your chosen provider, proceed 
 
 ### Deploy the module
 
-Deploy the module using either the [UGS CLI](#using-the-ugs-cli) (recommended) or the [Unity Editor](#using-the-unity-editor).
+Deploy the module using either the UGS CLI (recommended) or the Unity Editor.
 
 #### Using the UGS CLI
 
