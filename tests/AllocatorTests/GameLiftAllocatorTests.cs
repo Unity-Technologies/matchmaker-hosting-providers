@@ -71,7 +71,7 @@ public class GameLiftAllocatorTests
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
             new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new
             Dictionary<string, object>{
-                {"region", "customRegion"},
+                {"Region", "customRegion"},
             })));
         
         Assert.That(allocation.AllocationData, Is.Not.Null);
