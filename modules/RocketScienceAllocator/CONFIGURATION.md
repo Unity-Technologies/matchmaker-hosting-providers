@@ -33,3 +33,16 @@ private const string DefaultRegion = "your_default_region";
 ```
 
 Replace with your preferred region. Find available regions in Multiplay by Rocket Science under **Fleets** > **Region settings**.
+
+## Optional code changes
+
+### RocketScienceProjectID and RocketScienceEnvironmentID
+
+```csharp
+private const string RocketScienceProjectID = "";
+private const string RocketScienceEnvironmentID = "";
+```
+
+By default, the allocator uses the Unity project ID and environment ID from the Cloud Code execution context — i.e. the same project and environment where the Cloud Code module is deployed. This is the typical case for customers who have migrated from Unity Multiplay to Multiplay by Rocket Science.
+
+If your Multiplay by Rocket Science project and/or environment IDs differ from those in the Unity Dashboard, set these constants to override the context values. Leave them empty to use the context values.

@@ -25,11 +25,15 @@ public class ModuleConfig : ICloudCodeSetup
 public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScienceHttpClientFactory httpClientFactory, ILogger<RocketScienceAllocator> logger) : IMatchmakerAllocator
 {
     // Configuration - users should modify these constants for their setup
-    private const string FleetId = "your_fleet_id";
-    private const int BuildConfigId = 0;
-    private const string DefaultRegion = "your_default_region";
+    private const string FleetId = "019cbe7b-6b16-774b-8fc4-44e2f9e395fb";
+    private const int BuildConfigId = 2000012;
+    private const string DefaultRegion = "ddbf538c-1408-11f1-a08a-42010ab90008";
 
-    // TODO(dr): need a way to override project and env ID.
+    // Optional overrides - by default, the allocator uses the Unity project ID and environment ID from the Cloud Code
+    // execution context — i.e. the same project and environment where the Cloud Code module is deployed. This is the
+    // typical case for customers who have migrated from Unity Multiplay to Multiplay by Rocket Science.
+    private const string RocketScienceProjectID = "";
+    private const string RocketScienceEnvironmentID = "";
 
     // Service constants
     private const string BaseUrl = "https://api.multiplay.dev";
@@ -40,8 +44,11 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
     [CloudCodeFunction("Matchmaker_AllocateServer")]
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
-        var processAllocationUrl = $"{BaseUrl}/v4/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
+        var projectId = !string.IsNullOrEmpty(RocketScienceProjectID) ? RocketScienceProjectID : context.ProjectId;
+        var environmentId = !string.IsNullOrEmpty(RocketScienceEnvironmentID) ? RocketScienceEnvironmentID : context.EnvironmentId;
         var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegion;
+
+        var processAllocationUrl = $"{BaseUrl}/v4/projects/{projectId}/environments/{environmentId}/fleets/{FleetId}/allocations";
 
         try
         {
@@ -96,7 +103,10 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
     public async Task<PollResponse> Poll(IExecutionContext context, PollRequest request)
     {
         var allocationId = request.AllocationData["allocationId"].ToString();
-        var getAllocationUrl = $"{BaseUrl}/v4/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations/{allocationId}";
+        var projectId = !string.IsNullOrEmpty(RocketScienceProjectID) ? RocketScienceProjectID : context.ProjectId;
+        var environmentId = !string.IsNullOrEmpty(RocketScienceEnvironmentID) ? RocketScienceEnvironmentID : context.EnvironmentId;
+
+        var getAllocationUrl = $"{BaseUrl}/v4/projects/{projectId}/environments/{environmentId}/fleets/{FleetId}/allocations/{allocationId}";
 
         try
         {
