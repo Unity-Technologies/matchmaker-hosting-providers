@@ -25,13 +25,16 @@ public class ModuleConfig : ICloudCodeSetup
 public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScienceHttpClientFactory httpClientFactory, ILogger<RocketScienceAllocator> logger) : IMatchmakerAllocator
 {
     // Configuration - users should modify these constants for their setup
-    private const string FleetId = "your_fleet_id";
-    private const int BuildConfigId = 0;
-    private const string DefaultRegion = "your_default_region";
+    private const string FleetId = "019cbe7b-6b16-774b-8fc4-44e2f9e395fb";
+    private const int BuildConfigId = 2000012;
+    private const string DefaultRegion = "ddbf538c-1408-11f1-a08a-42010ab90008";
 
     // Optional overrides - by default, the allocator uses the Unity project ID and environment ID from the Cloud Code
     // execution context — i.e. the same project and environment where the Cloud Code module is deployed. This is the
     // typical case for customers who have migrated from Unity Multiplay to Multiplay by Rocket Science.
+    //
+    // Set these values if your Multiplay by Rocket Science project or environment IDs differ from your Unity project
+    // and environment. You can find these IDs in the Multiplay by Rocket Science dashboard.
     private const string RocketScienceProjectID = "";
     private const string RocketScienceEnvironmentID = "";
 
