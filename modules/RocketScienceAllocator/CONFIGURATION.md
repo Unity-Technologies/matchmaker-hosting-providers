@@ -6,6 +6,8 @@ Add these secrets in the [Unity Dashboard](https://cloud.unity.com) under **Admi
 
 - `ROCKET_SCIENCE_MULTIPLAY_API_KEY` - Your Rocket Science by Multiplay API key, this key must have permission to read and write allocations.
 
+You can create an API key in the [Multiplay by Rocket Science dashboard](https://dashboard.multiplay.dev) under **API Keys**. Ensure you give the API key `Server Write` and `Server Read` permissions.
+
 ## Required code changes
 
 Edit `Project/RocketScienceAllocator.cs` and update these constants:
