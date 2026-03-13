@@ -32,7 +32,7 @@ Then select the hosting provider that you want to use under `modules/<provider_n
 - **MultiplayAllocator** - Unity Multiplay integration
 - **PlayFabAllocator** - Microsoft PlayFab integration
 - **EdgegapAllocator** - Edgegap integration
-- (Coming Soon) RocketScienceAllocator - Multiplay by RocketScience integration
+- **RocketScienceAllocator** - Multiplay by Rocket Science integration
 
 ### Configure the module
 
@@ -43,6 +43,7 @@ Each module contains a `CONFIGURATION.md` file with detailed instructions on upd
 - [MultiplayAllocator/CONFIGURATION.md](modules/MultiplayAllocator/CONFIGURATION.md)
 - [PlayFabAllocator/CONFIGURATION.md](modules/PlayFabAllocator/CONFIGURATION.md)
 - [EdgegapAllocator/CONFIGURATION.md](modules/EdgegapAllocator/CONFIGURATION.md)
+- [RocketScienceAllocator/CONFIGURATION.md](modules/RocketScienceAllocator/CONFIGURATION.md)
 
 Once you've completed the configuration steps for your chosen provider, proceed to deploying the module.
 
@@ -63,7 +64,7 @@ ugs deploy modules/<provider_name>
 2. Install the `com.unity.services.cloudcode` and `com.unity.services.deployment` pacakges.
 3. Create a new module reference by selecting **Right Click** > **Create** > **Services** > **Cloud Code C# Module Reference**
 4. Edit the reference in the inspector to point to the module's sln file.
-5. Deploy the module using the **Deploy Selected** button in the deployment window. (**Services** > **Deployment**) 
+5. Deploy the module using the **Deploy Selected** button in the deployment window. (**Services** > **Deployment**)
 
 ### Configure Unity Dashboard
 
