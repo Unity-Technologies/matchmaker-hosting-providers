@@ -27,7 +27,7 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
     // Configuration - users should modify these constants for their setup
     private const string FleetId = "your_fleet_id";
     private const int BuildConfigId = 0;
-    private const string DefaultRegion = "your_default_region";
+    private const string DefaultRegionId = "your_default_region";
 
     // Optional overrides - by default, the allocator uses the Unity project ID and environment ID from the Cloud Code
     // execution context — i.e. the same project and environment where the Cloud Code module is deployed. This is the
@@ -49,7 +49,7 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
     {
         var projectId = !string.IsNullOrEmpty(RocketScienceProjectID) ? RocketScienceProjectID : context.ProjectId;
         var environmentId = !string.IsNullOrEmpty(RocketScienceEnvironmentID) ? RocketScienceEnvironmentID : context.EnvironmentId;
-        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegion;
+        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegionId;
 
         var processAllocationUrl = $"{BaseUrl}/v4/projects/{projectId}/environments/{environmentId}/fleets/{FleetId}/allocations";
 

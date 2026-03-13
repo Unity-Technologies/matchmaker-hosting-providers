@@ -6,7 +6,7 @@ Add these secrets in the [Unity Dashboard](https://cloud.unity.com) under **Admi
 
 - `ROCKET_SCIENCE_MULTIPLAY_API_KEY` - Your Rocket Science by Multiplay API key, this key must have permission to read and write allocations.
 
-You can create an API key in the [Multiplay by Rocket Science dashboard](https://dashboard.multiplay.dev) under **API Keys**. Ensure you give the API key `Server Write` and `Server Read` permissions.
+You can create an API key in the [Multiplay Dashboard](https://dashboard.multiplay.dev) under **API Keys**. Ensure you give the API key `Server Write` and `Server Read` permissions.
 
 ## Required code changes
 
@@ -18,7 +18,7 @@ Edit `Project/RocketScienceAllocator.cs` and update these constants:
 private const string FleetId = "your_fleet_id";
 ```
 
-Replace with your Multiplay by Rocket Science fleet ID from the [Dashboard](https://dashboard.multiplay.dev) under **Fleets**.
+Replace with the ID of the Multiplay by Rocket Science fleet you want to integrate with Unity Matchmaker. You can find this on the [Multiplay Dashboard](https://dashboard.multiplay.dev) under **Fleets**.
 
 ### BuildConfigId
 
@@ -26,15 +26,15 @@ Replace with your Multiplay by Rocket Science fleet ID from the [Dashboard](http
 private const int BuildConfigId = 0;
 ```
 
-Replace with your build configuration ID from Multiplay by Rocket Science under **Build Configurations**.
+Replace with the ID of the build configuration that you want to use when allocating game servers with Unity Matchmaker. You can find this in the [Multiplay Dashboard](https://dashboard.multiplay.dev) on the **Build Configurations** tab of your fleet.
 
-### DefaultRegion
+### DefaultRegionId
 
 ```csharp
-private const string DefaultRegion = "your_default_region";
+private const string DefaultRegionId = "your_default_region";
 ```
 
-Replace with your preferred region. Find available regions in Multiplay by Rocket Science under **Fleets** > **Region settings**.
+Replace with the ID of the region you want to use as the default or fallback when allocating game servers via the matchmaker. This will be used only in the case where your Unity Matchmaker ticket did not contain a requested region ID. You can find this in the [Multiplay Dashboard](https://dashboard.multiplay.dev) on the **Scaling settings** tab of your fleet.
 
 ## Optional code changes
 
