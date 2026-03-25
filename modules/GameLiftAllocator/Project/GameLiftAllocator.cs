@@ -43,7 +43,12 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, IGameLiftFactory ga
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         // Determine AWS region from match properties or use default
-        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultAwsRegion;
+        var regionValue = request.MatchmakingResults.MatchProperties.GetValueOrDefault("Region")?.ToString();
+        var region = string.IsNullOrEmpty(regionValue) ? DefaultAwsRegion : regionValue;
+        
+        // maxPlayers is only available in match properties when using Cloud Code hosting 
+        // It is not present when using Multiplay hosting with Cloud Code override
+        var maximumPlayerSessionCount = request.MatchmakingResults.MatchProperties.GetValueOrDefault("MaxPlayers") ?? DefaultMaximumPlayerSessionCount;
 
         try
         {
@@ -62,7 +67,7 @@ public class GameLiftAllocator(IGameApiClient gameApiClient, IGameLiftFactory ga
             {
                 PlacementId = request.MatchId, // Use matchId for idempotency
                 GameSessionQueueName = GameSessionQueueName,
-                MaximumPlayerSessionCount = DefaultMaximumPlayerSessionCount,
+                MaximumPlayerSessionCount = Convert.ToInt32(maximumPlayerSessionCount),
                 GameSessionData = gameSessionData
             };
 

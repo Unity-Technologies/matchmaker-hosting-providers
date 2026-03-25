@@ -56,6 +56,29 @@ public class GameLiftAllocatorTests
     }
     
     [Test]
+    public async Task TestThatGameLiftDefaultsRegionWhenEmptyString()
+    {
+        _gameLiftMock.Reset();
+        _gameLiftMock.Setup(g => g.StartGameSessionPlacementAsync(It.IsAny<StartGameSessionPlacementRequest>(), CancellationToken.None))
+            .ReturnsAsync(new StartGameSessionPlacementResponse
+            {
+                GameSessionPlacement = new GameSessionPlacement
+                {
+                    PlacementId = "placementId",
+                }
+            });
+        
+        var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new
+            Dictionary<string, object>{
+                {"Region", ""},
+            })));
+        
+        Assert.That(allocation.AllocationData, Is.Not.Null);
+        Assert.That(allocation.AllocationData["awsRegion"], Is.EqualTo("eu-west-2"));
+    }
+
+    [Test]
     public async Task TestThatGameLiftCanAllocateToRegions()
     {
         _gameLiftMock.Reset();
@@ -71,7 +94,7 @@ public class GameLiftAllocatorTests
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
             new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new
             Dictionary<string, object>{
-                {"region", "customRegion"},
+                {"Region", "customRegion"},
             })));
         
         Assert.That(allocation.AllocationData, Is.Not.Null);
