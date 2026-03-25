@@ -61,7 +61,7 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
 
             var content = new StringContent(JsonConvert.SerializeObject(new ProcessAllocationRequest()
             {
-                AllocationId = Guid.NewGuid().ToString(),
+                AllocationId = request.MatchId,
                 BuildConfigurationId = BuildConfigId,
                 RegionId = region,
                 Payload = JsonConvert.SerializeObject(request.MatchmakingResults)
