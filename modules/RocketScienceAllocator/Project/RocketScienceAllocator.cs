@@ -122,6 +122,8 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
             var responseContent = await allocation.Content.ReadAsStringAsync();
             if (!allocation.IsSuccessStatusCode)
             {
+                logger.LogError("Error polling allocation {error}", responseContent);
+
                 return new PollResponse(PollStatus.Error)
                 {
                     Message = responseContent
