@@ -111,7 +111,7 @@ public class PlayFabAllocator(IGameApiClient gameApiClient, IPlayFabFactory play
 
             var multiplayerInstanceApi = playFabFactory.CreateMultiplayerInstanceApi(playFabApiSettings, authenticationContext);
 
-            var preferredRegion = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultPlayFabRegion;
+            var preferredRegion = request.MatchmakingResults.MatchProperties.GetValueOrDefault("Region")?.ToString() ?? DefaultPlayFabRegion;
             if (string.IsNullOrWhiteSpace(preferredRegion))
             {
                 logger.LogError("An error occurred when retrieving the region in matchmaking properties. The region field must not be empty or whitespace.");

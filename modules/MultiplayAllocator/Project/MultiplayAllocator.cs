@@ -34,7 +34,7 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger, IMultiplayHt
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         var createAllocationUrl = $"https://{MultiplayHost}/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
-        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegion;
+        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("Region")?.ToString() ?? DefaultRegion;
 
         using var client = httpClientFactory.Create(context.ServiceToken);
 
