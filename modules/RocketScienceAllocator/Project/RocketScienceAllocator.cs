@@ -49,7 +49,7 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
     {
         var projectId = !string.IsNullOrEmpty(RocketScienceProjectID) ? RocketScienceProjectID : context.ProjectId;
         var environmentId = !string.IsNullOrEmpty(RocketScienceEnvironmentID) ? RocketScienceEnvironmentID : context.EnvironmentId;
-        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("region")?.ToString() ?? DefaultRegionId;
+        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("Region")?.ToString() ?? DefaultRegionId;
 
         var processAllocationUrl = $"{BaseUrl}/v4/projects/{projectId}/environments/{environmentId}/fleets/{FleetId}/allocations";
 
