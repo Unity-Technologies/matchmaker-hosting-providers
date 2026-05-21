@@ -49,7 +49,9 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
     {
         var projectId = !string.IsNullOrEmpty(RocketScienceProjectID) ? RocketScienceProjectID : context.ProjectId;
         var environmentId = !string.IsNullOrEmpty(RocketScienceEnvironmentID) ? RocketScienceEnvironmentID : context.EnvironmentId;
-        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("Region")?.ToString() ?? DefaultRegionId;
+        var regionValue = request.MatchmakingResults.MatchProperties.GetValueOrDefault("Region")?.ToString();
+        // Explicitly check for null or empty, as tickets without QoS may pass empty Region string value
+        var region = string.IsNullOrEmpty(regionValue) ? DefaultRegionId : regionValue;
 
         var processAllocationUrl = $"{BaseUrl}/v4/projects/{projectId}/environments/{environmentId}/fleets/{FleetId}/allocations";
 

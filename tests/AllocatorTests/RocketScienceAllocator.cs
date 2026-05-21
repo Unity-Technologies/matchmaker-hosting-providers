@@ -56,6 +56,31 @@ public class RocketScienceAllocatorTests
     }
 
     [Test]
+    public async Task TestRocketScienceAllocatorUsesDefaultsRegionWhenEmptyString()
+    {
+        _httpMessageHandlerMock.Reset();
+        _httpMessageHandlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage()
+            {
+                Content = new StringContent("{'allocationId': 'allocationId'}")
+            });
+        
+        var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new
+            Dictionary<string, object>{
+                {"Region", ""},
+            })));
+        
+        Assert.That(allocation.AllocationData, Is.Not.Null);
+        Assert.That(allocation.AllocationData["region"], Is.EqualTo("your_default_region"));
+    }
+
+    [Test]
     public async Task TestRocketScienceCanPoll()
     {
         _httpMessageHandlerMock.Reset();
