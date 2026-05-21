@@ -28,4 +28,7 @@ public class SessionRequest
 
 	[JsonProperty("ttl")]
 	public int? Ttl { get; set; }
+
+	[JsonProperty("version", NullValueHandling = NullValueHandling.Ignore)]
+	public string? Version { get; set; }
 }

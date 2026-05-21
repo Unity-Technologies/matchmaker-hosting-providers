@@ -14,19 +14,93 @@ Add the following secret in the Unity Dashboard under **Administration > Secrets
 
 ## Code Configuration
 
-Update the following constants in `Project/GameyeAllocator.cs`:
+All configuration is set in `ModuleConfig.Setup()` in `Project/GameyeAllocator.cs`, where a `GameyeAllocatorConfig` instance is registered with dependency injection. Open that file and edit the values in the config block.
 
-### `ImageName` (line 25)
+### `Environment`
 
-Set this to the name of your application image as configured in the Gameye Admin Panel. This must match the image name you registered during setup.
+Controls which Gameye API endpoint the allocator targets.
 
-### `DefaultLocation` (line 26)
+| Value | API URL |
+|---|---|
+| `GameyeEnvironment.Sandbox` (default) | `https://api.sandbox-gameye.gameye.net` |
+| `GameyeEnvironment.Production` | `https://api-production-gameye.gameye.net` |
 
-Set this to your preferred default deployment region (e.g. `"europe"`, `"north-america"`). See [available locations](https://www.gameye.com/docs/api-v2/available-locations/) for the full list.
+Use `Sandbox` during development and testing. Switch to `Production` before going live.
 
-### `GamePort` (line 27)
+### `ImageName` (required)
 
-Set this to the container port your game server listens on (e.g. `7777`). This must match the port exposed in your Dockerfile and configured in the Gameye Admin Panel.
+The name of your application image as configured in the Gameye Admin Panel. Must match exactly.
+
+### `DefaultLocation`
+
+Your preferred default deployment region (e.g. `"europe"`, `"us-east-1"`). Used when the matched pool has no entry in `LocationByPool`. See [available locations](https://www.gameye.com/docs/api-v2/available-locations/) for the full list. Defaults to `"europe"`.
+
+### `LocationByPool` (optional)
+
+Maps Unity Matchmaker **pool names** to Gameye location IDs, enabling dynamic region selection per match. When the matched pool is found in this dictionary, that location is sent to Gameye instead of `DefaultLocation`. Pools not in the map fall through to `DefaultLocation`.
+
+Unity Matchmaker uses pools for region routing — create one pool per region in your queue configuration, then mirror that mapping here.
+
+```csharp
+LocationByPool = new Dictionary<string, string>
+{
+    { "eu-west-pool",    "eu-west"        },
+    { "us-central-pool", "us-central"     },
+    { "ap-ne-pool",      "asia-northeast" },
+    { "sa-east-pool",    "southamerica"   },
+},
+```
+
+Leave empty (the default) to always use `DefaultLocation`.
+
+### `GamePort`
+
+The primary container port your game server listens on (e.g. `7777`). This must match the port exposed in your Dockerfile and configured in the Gameye Admin Panel. This is the port passed to Unity Matchmaker's `AssignmentData.IpPort()`.
+
+### `AdditionalPorts` (optional)
+
+A dictionary of additional named ports to include in allocation data. Use this when your game server exposes secondary ports (e.g. a query port, voice port, or RCON port).
+
+Each entry is returned in `AllocationData` as `port_{name}` so game clients can access them.
+
+```csharp
+AdditionalPorts = new Dictionary<string, int>
+{
+    { "query", 27015 },
+    { "rcon", 27020 },
+},
+```
+
+### `Version` (optional)
+
+A specific Docker image tag / version to use when starting sessions. When `null` (the default), Gameye uses the highest-priority tag configured in the Admin Panel.
+
+```csharp
+Version = "v1.2.3",
+```
+
+## Example Configuration
+
+```csharp
+config.Dependencies.AddSingleton(new GameyeAllocatorConfig
+{
+    ImageName = "my-fps-server",
+    Environment = GameyeEnvironment.Production,
+    DefaultLocation = "eu-west",
+    GamePort = 7777,
+    Version = "v2.1.0",
+    LocationByPool = new Dictionary<string, string>
+    {
+        { "eu-west-pool",    "eu-west"    },
+        { "us-central-pool", "us-central" },
+        { "ap-ne-pool",      "asia-northeast" },
+    },
+    AdditionalPorts = new Dictionary<string, int>
+    {
+        { "query", 27015 },
+    },
+});
+```
 
 ## How It Works
 
