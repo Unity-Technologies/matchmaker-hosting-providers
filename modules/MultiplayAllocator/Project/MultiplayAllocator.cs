@@ -34,7 +34,10 @@ public class MultiplayAllocator(ILogger<MultiplayAllocator> logger, IMultiplayHt
     public async Task<AllocateResponse> Allocate(IExecutionContext context, AllocateRequest request)
     {
         var createAllocationUrl = $"https://{MultiplayHost}/v1/allocations/projects/{context.ProjectId}/environments/{context.EnvironmentId}/fleets/{FleetId}/allocations";
-        var region = request.MatchmakingResults.MatchProperties.GetValueOrDefault("Region")?.ToString() ?? DefaultRegion;
+        
+        var regionValue = request.MatchmakingResults.MatchProperties.GetValueOrDefault("Region")?.ToString();
+        // explicitly check for null or empty, as tickets without QoS may pass empty Region string value
+        var region = string.IsNullOrEmpty(regionValue) ? DefaultRegion : regionValue;        
 
         using var client = httpClientFactory.Create(context.ServiceToken);
 
