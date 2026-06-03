@@ -38,6 +38,9 @@ public class GameyeAllocatorTests
 	public void SetUp()
 	{
 		_httpMessageHandlerMock.Reset();
+		// NUnit reuses one fixture instance across tests, so clear accumulated logger
+		// invocations to keep per-test Verify(... Times.Once/Never) assertions isolated.
+		_loggerMock.Invocations.Clear();
 		_gameClientMock.SetupGet(g => g.SecretManager).Returns(_secretClientMock.Object);
 		_secretClientMock.Setup(s => s.GetSecret(_executionContextMock.Object, It.IsAny<string>()))
 			.ReturnsAsync(new Secret("secret"));
@@ -151,6 +154,53 @@ public class GameyeAllocatorTests
 
 		Assert.That(capturedRequest!.RequestUri!.ToString(),
 			Does.StartWith("https://api-production-gameye.gameye.net/session"));
+	}
+
+	// ── Environment logging ──────────────────────────────────────────
+
+	[Test]
+	public async Task TestGameyeLogsWarningWhenRunningInSandbox()
+	{
+		SetupHttpResponse(SuccessResponse());
+
+		await CreateAllocator(new GameyeAllocatorConfig { ImageName = "g", Environment = GameyeEnvironment.Sandbox })
+			.Allocate(_executionContextMock.Object, MakeAllocateRequest());
+
+		_loggerMock.Verify(
+			x => x.Log(
+				LogLevel.Warning,
+				It.IsAny<EventId>(),
+				It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("SANDBOX")),
+				It.IsAny<Exception>(),
+				It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+			Times.Once);
+	}
+
+	[Test]
+	public async Task TestGameyeLogsInfoAndNoWarningWhenRunningInProduction()
+	{
+		SetupHttpResponse(SuccessResponse());
+
+		await CreateAllocator(new GameyeAllocatorConfig { ImageName = "g", Environment = GameyeEnvironment.Production })
+			.Allocate(_executionContextMock.Object, MakeAllocateRequest());
+
+		_loggerMock.Verify(
+			x => x.Log(
+				LogLevel.Information,
+				It.IsAny<EventId>(),
+				It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("PRODUCTION")),
+				It.IsAny<Exception>(),
+				It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+			Times.Once);
+
+		_loggerMock.Verify(
+			x => x.Log(
+				LogLevel.Warning,
+				It.IsAny<EventId>(),
+				It.IsAny<It.IsAnyType>(),
+				It.IsAny<Exception>(),
+				It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+			Times.Never);
 	}
 
 	// ── Version field ─────────────────────────────────────────────────

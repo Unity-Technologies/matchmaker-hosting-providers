@@ -91,6 +91,18 @@ public class GameyeAllocator(
 	{
 		try
 		{
+			// Surface which Gameye environment this allocation targets. Environment defaults to
+			// Sandbox, so a production deployment that forgot to set it will emit a warning on
+			// every allocation rather than silently routing live traffic to sandbox infrastructure.
+			if (allocatorConfig.Environment == GameyeEnvironment.Sandbox)
+			{
+				logger.LogWarning("GameyeAllocator is running in SANDBOX ({ApiBaseUrl}) — sandbox infrastructure is not intended for production traffic. Set Environment = GameyeEnvironment.Production in ModuleConfig.Setup() before going live.", allocatorConfig.ApiBaseUrl);
+			}
+			else
+			{
+				logger.LogInformation("GameyeAllocator is running in PRODUCTION ({ApiBaseUrl}).", allocatorConfig.ApiBaseUrl);
+			}
+
 			Secret gameyeApiToken = await gameApiClient.SecretManager.GetSecret(context, GameyeApiTokenSecretName);
 			using HttpClient client = httpClientFactory.Create(gameyeApiToken.Value);
 

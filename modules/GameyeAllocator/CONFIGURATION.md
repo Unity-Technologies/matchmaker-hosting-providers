@@ -27,6 +27,8 @@ Controls which Gameye API endpoint the allocator targets.
 
 Use `Sandbox` during development and testing. Switch to `Production` before going live.
 
+> ⚠️ **`Environment` defaults to `Sandbox`.** If you go live without setting `Environment = GameyeEnvironment.Production`, every allocation silently targets sandbox infrastructure. As a safeguard, the allocator logs a **warning on every allocation while running in Sandbox** (and an info line confirming `PRODUCTION` once switched) — watch your Cloud Code logs to confirm the environment before launch.
+
 ### `ImageName` (required)
 
 The name of your application image as configured in the Gameye Admin Panel. Must match exactly.
