@@ -39,7 +39,7 @@ Your preferred default deployment region (e.g. `"europe"`, `"us-east-1"`). Used 
 
 Maps Unity Matchmaker **pool names** to Gameye location IDs, enabling dynamic region selection per match. When the matched pool is found in this dictionary, that location is sent to Gameye instead of `DefaultLocation`. Pools not in the map fall through to `DefaultLocation`.
 
-Unity Matchmaker uses pools for region routing — create one pool per region in your queue configuration, then mirror that mapping here.
+Unity Matchmaker can be configured to use pools for region routing — create one pool per region in your queue configuration, then mirror that mapping here.
 
 ```csharp
 LocationByPool = new Dictionary<string, string>
