@@ -34,7 +34,7 @@ public class ModuleConfig : ICloudCodeSetup
 		config.Dependencies.AddSingleton(new GameyeAllocatorConfig
 		{
 			// Required — the application image name registered in the Gameye Admin Panel.
-			ImageName = "test_nginx",
+			ImageName = "your-image-name",
 
 			// The API environment. Use Sandbox for development, Production for live.
 			Environment = GameyeEnvironment.Sandbox,
