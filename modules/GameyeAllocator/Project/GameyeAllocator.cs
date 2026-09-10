@@ -26,7 +26,7 @@ public class ModuleConfig : ICloudCodeSetup
 	public void Setup(ICloudCodeConfig config)
 	{
 		config.Dependencies.AddSingleton(GameApiClient.Create());
-		config.Dependencies.AddScoped<IGameyeHttpClientFactory, GameyeHttpClientFactory>();
+		config.Dependencies.AddSingleton<IGameyeHttpClientFactory, GameyeHttpClientFactory>();
 
 		// ──────────────────────────────────────────────────────────────
 		// Gameye allocator configuration — edit the values below.

@@ -26,18 +26,24 @@ public class ModuleConfig : ICloudCodeSetup
 
     public void Setup(ICloudCodeConfig config)
     {
-        config.Dependencies.AddScoped<IRequestAdapter>(_ =>
+        config.Dependencies.AddSingleton<IRequestAdapter>(_ =>
         {
             // TODO: Replace with required auth of your service
             var authProvider = new AnonymousAuthenticationProvider();
 
-            var handler = new HttpClientHandler
+            var handler = new SocketsHttpHandler
             {
+                PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+                PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+                MaxConnectionsPerServer = 300,
                 // TODO: Implement MTLS or other cert validation here
-                // ServerCertificateCustomValidationCallback = (_, _, _, _) => throw new NotImplementedException()
+                // SslOptions = new SslClientAuthenticationOptions { RemoteCertificateValidationCallback = (_, _, _, _) => throw new NotImplementedException() },
             };
-            
-            return new HttpClientRequestAdapter(authProvider, httpClient: new HttpClient(handler))
+
+            // Cloud Code cancels an invocation at 15s; fail with budget left to return an error.
+            var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
+
+            return new HttpClientRequestAdapter(authProvider, httpClient: httpClient)
             {
                 BaseUrl = AllocatorServiceBaseUrl
             };

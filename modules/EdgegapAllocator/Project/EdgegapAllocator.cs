@@ -28,7 +28,7 @@ public class ModuleConfig : ICloudCodeSetup
 	public void Setup(ICloudCodeConfig config)
 	{
 		config.Dependencies.AddSingleton(GameApiClient.Create());
-		config.Dependencies.AddScoped<IEdgegapHttpClientFactory, EdgegapHttpClientFactory>();
+		config.Dependencies.AddSingleton<IEdgegapHttpClientFactory, EdgegapHttpClientFactory>();
 	}
 }
 
@@ -143,8 +143,8 @@ public class EdgegapAllocator(IGameApiClient gameApiClient, IEdgegapHttpClientFa
 		try
 		{
 			Secret edgegapApiToken = await gameApiClient.SecretManager.GetSecret(context, EdgegapApiTokenSecretName);
-			HttpClient client = httpClientFactory.Create(edgegapApiToken.Value);
-			HttpResponseMessage response = await client.GetAsync($"{EdgegapApiUrl}/v1/status/{requestId}");
+			using HttpClient client = httpClientFactory.Create(edgegapApiToken.Value);
+			using HttpResponseMessage response = await client.GetAsync($"{EdgegapApiUrl}/v1/status/{requestId}");
 			string responseContent = await response.Content.ReadAsStringAsync();
 
 			if (!response.IsSuccessStatusCode)
