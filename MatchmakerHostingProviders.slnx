@@ -6,4 +6,5 @@
   <Project Path="modules/AgonesAllocator/Project/AgonesAllocator.csproj" />
   <Project Path="modules/EdgegapAllocator/Project/EdgegapAllocator.csproj" />
   <Project Path="modules/RocketScienceAllocator/Project/RocketScienceAllocator.csproj" />
+  <Project Path="modules/LocalServerAllocator/Project/LocalServerAllocator.csproj" />
 </Solution>
