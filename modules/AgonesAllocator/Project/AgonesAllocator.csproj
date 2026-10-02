@@ -7,8 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Com.Unity.Services.CloudCode.Apis" Version="0.0.24" />
-      <PackageReference Include="Com.Unity.Services.CloudCode.Core" Version="0.0.3" />
+      <PackageReference Include="Com.Unity.Services.CloudCode.Apis" Version="0.0.26" />
+      <PackageReference Include="Com.Unity.Services.CloudCode.Core" Version="0.0.5" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.1" />
       <PackageReference Include="Microsoft.Kiota.Bundle" Version="1.21.1" />
     </ItemGroup>
