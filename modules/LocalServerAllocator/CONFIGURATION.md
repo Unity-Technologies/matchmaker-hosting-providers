@@ -254,6 +254,137 @@ public class ClientBootstrap : MonoBehaviour
 }
 ```
 
+## Player-hosted variant (no service account)
+
+The module only cares that something creates the control session and then hosts a session under each match id. A
+regular **player** can do that instead of a dedicated server: it signs in anonymously, so you need no service account
+and no server build. Run it as a second Multiplayer Play Mode player next to your client.
+
+What changes compared with the server:
+
+- The host is a **player in the match session**. It takes a slot, shows up in the session's players, and your netcode
+  runs as a host (with its own player object) rather than as a dedicated server. Set the host's `MaxPlayers` to the
+  pool's maximum player count **plus one**.
+- It exercises the matchmaker-to-host flow, not the server APIs (`MultiplayerServerService`,
+  `CreateMatchSessionAsync`). The session is not created with the match's matchmaking results, so don't use this
+  variant for backfill.
+- The host creates both sessions with `MultiplayerService.Instance.CreateOrJoinSessionAsync(id, options)`, the
+  player-side call that takes a session id. The control session needs its own `SessionOptions.Type`, because the
+  SDK keeps one session per type.
+
+```csharp
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Unity.Services.Authentication;
+using Unity.Services.Core;
+using Unity.Services.Multiplayer;
+using UnityEngine;
+
+public class HostBootstrap : MonoBehaviour
+{
+    // Must match the module's constants.
+    const string AllocatorPlayerId = "LocalServerAllocator00000000";
+    const string PendingMatchIdKey = "pendingMatchId";
+    const string ControlSessionPrefix = "local-";
+
+    // The SDK keeps one session per type, so the control session can't share the match session's type.
+    const string ControlSessionType = "LocalServerControl";
+
+    [SerializeField] string m_LocalServerId = "dev-a";
+    [SerializeField] bool m_UseRelay;
+    [Tooltip("The queue pool's maximum player count, plus one for this host.")]
+    [SerializeField] int m_MaxPlayers = 2;
+
+    ISession m_ControlSession;
+    ISession m_MatchSession;
+    string m_LastHandledMatchId;
+
+    async void Start()
+    {
+        try
+        {
+            await UnityServices.InitializeAsync();
+            if (!AuthenticationService.Instance.IsSignedIn)
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+            var controlSessionId = ControlSessionPrefix + m_LocalServerId;
+            m_ControlSession = await MultiplayerService.Instance.CreateOrJoinSessionAsync(controlSessionId,
+                new SessionOptions { Name = controlSessionId, Type = ControlSessionType, IsPrivate = true, MaxPlayers = 2 });
+
+            // The allocator joins once, then updates its player data for every later match.
+            m_ControlSession.PlayerJoined += _ => OnControlSessionChanged();
+            m_ControlSession.PlayerPropertiesChanged += OnControlSessionChanged;
+            Debug.Log($"Control session '{m_ControlSession.Id}' ready.");
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+
+    void OnControlSessionChanged() => _ = CreatePendingMatchSessionAsync();
+
+    async Task CreatePendingMatchSessionAsync()
+    {
+        var allocator = m_ControlSession.Players.FirstOrDefault(player => player.Id == AllocatorPlayerId);
+        if (allocator == null ||
+            !allocator.Properties.TryGetValue(PendingMatchIdKey, out var pendingMatchId) ||
+            string.IsNullOrEmpty(pendingMatchId.Value) ||
+            pendingMatchId.Value == m_LastHandledMatchId)
+        {
+            return;
+        }
+
+        var matchId = pendingMatchId.Value;
+        m_LastHandledMatchId = matchId;
+
+        try
+        {
+            // One NetworkManager runs one match at a time, so the next match replaces the current one.
+            if (m_MatchSession != null)
+            {
+                var previousMatchSession = m_MatchSession;
+                m_MatchSession = null;
+                await previousMatchSession.AsHost().DeleteAsync();
+            }
+
+            var options = new SessionOptions { MaxPlayers = m_MaxPlayers };
+            options = m_UseRelay ? options.WithRelayNetwork() : options.WithDirectNetwork();
+
+            m_MatchSession = await MultiplayerService.Instance.CreateOrJoinSessionAsync(matchId, options);
+            m_MatchSession.PlayerJoined += playerId => Debug.Log($"Player joined match {matchId}: {playerId}");
+            Debug.Log($"Match session '{m_MatchSession.Id}' hosted ({(m_UseRelay ? "Relay" : "Direct")}).");
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+    }
+}
+```
+
+The client is the same as above.
+
+### Run with Multiplayer Play Mode
+
+1. Install Multiplayer Play Mode (`com.unity.multiplayer.playmode`), open **Window** > **Multiplayer** >
+   **Multiplayer Play Mode**, and activate one additional player.
+2. Create a `Host` tag and give it to that player.
+3. Pick the role at startup, for example from one bootstrap object:
+
+   ```csharp
+   if (Unity.Multiplayer.PlayMode.CurrentPlayer.ReadOnlyTags().Contains("Host"))
+       gameObject.AddComponent<HostBootstrap>();
+   else
+       gameObject.AddComponent<ClientBootstrap>();
+   ```
+
+4. Enter Play Mode. Wait for `Control session 'local-dev-a' ready.` on the host before the client matchmakes.
+
+The host and the client must sign in as **different** players. If they end up with the same player id, give the host
+its own authentication profile before signing in.
+
 ## Deploy and run
 
 1. Deploy the module and the queue, with the UGS CLI or the Unity Editor as described in the
