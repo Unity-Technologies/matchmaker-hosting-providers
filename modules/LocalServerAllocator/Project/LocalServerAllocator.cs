@@ -1,8 +1,8 @@
 using System.Net;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Unity.Services.CloudCode.Apis;
+using Unity.Services.CloudCode.Apis.Extensions;
 using Unity.Services.CloudCode.Apis.Matchmaker;
 using Unity.Services.CloudCode.Core;
 using Unity.Services.CloudCode.Shared;
@@ -14,7 +14,7 @@ public class ModuleConfig : ICloudCodeSetup
 {
     public void Setup(ICloudCodeConfig config)
     {
-        config.Dependencies.AddSingleton(GameApiClient.Create());
+        config.AddGameApiClient();
     }
 }
 
