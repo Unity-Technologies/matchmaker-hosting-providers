@@ -15,6 +15,7 @@ jobs:
             "MultiplayAllocator",
             "PlayFabAllocator",
             "AgonesAllocator",
+            "LocalServerAllocator",
           ]
     steps:
       - uses: actions/checkout@v5

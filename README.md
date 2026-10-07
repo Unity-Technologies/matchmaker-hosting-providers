@@ -34,6 +34,7 @@ Then select the hosting provider that you want to use under `modules/<provider_n
 - **EdgegapAllocator** - Edgegap integration
 - **GameyeAllocator** - Gameye integration
 - **RocketScienceAllocator** - Multiplay by Rocket Science integration
+- **LocalServerAllocator** - a server running on your own machine, for local development and testing (interim; not a hosting provider)
 
 ### Configure the module
 
@@ -46,6 +47,7 @@ Each module contains a `CONFIGURATION.md` file with detailed instructions on upd
 - [EdgegapAllocator/CONFIGURATION.md](modules/EdgegapAllocator/CONFIGURATION.md)
 - [GameyeAllocator/CONFIGURATION.md](modules/GameyeAllocator/CONFIGURATION.md)
 - [RocketScienceAllocator/CONFIGURATION.md](modules/RocketScienceAllocator/CONFIGURATION.md)
+- [LocalServerAllocator/CONFIGURATION.md](modules/LocalServerAllocator/CONFIGURATION.md)
 
 Once you've completed the configuration steps for your chosen provider, proceed to deploying the module.
 
