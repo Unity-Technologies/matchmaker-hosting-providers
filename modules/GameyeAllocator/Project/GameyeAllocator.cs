@@ -126,7 +126,7 @@ public class GameyeAllocator(
 			};
 
 			var content = new StringContent(JsonConvert.SerializeObject(sessionRequest), Encoding.UTF8, "application/json");
-			HttpResponseMessage response = await client.PostAsync($"{allocatorConfig.ApiBaseUrl}/session", content);
+			using HttpResponseMessage response = await client.PostAsync($"{allocatorConfig.ApiBaseUrl}/session", content);
 
 			string responseContent = await response.Content.ReadAsStringAsync();
 			if (!response.IsSuccessStatusCode)
@@ -200,7 +200,7 @@ public class GameyeAllocator(
 		{
 			Secret gameyeApiToken = await gameApiClient.SecretManager.GetSecret(context, GameyeApiTokenSecretName);
 			using HttpClient client = httpClientFactory.Create(gameyeApiToken.Value);
-			HttpResponseMessage response = await client.GetAsync($"{allocatorConfig.ApiBaseUrl}/session/{sessionId}");
+			using HttpResponseMessage response = await client.GetAsync($"{allocatorConfig.ApiBaseUrl}/session/{sessionId}");
 			string responseContent = await response.Content.ReadAsStringAsync();
 
 			if (!response.IsSuccessStatusCode)

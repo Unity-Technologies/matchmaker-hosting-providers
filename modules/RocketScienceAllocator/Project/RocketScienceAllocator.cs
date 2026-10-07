@@ -69,7 +69,7 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
                 Payload = JsonConvert.SerializeObject(request.MatchmakingResults)
             }), Encoding.UTF8, "application/json");
 
-            var response = await client.PostAsync(processAllocationUrl, content);
+            using var response = await client.PostAsync(processAllocationUrl, content);
 
             var responseContent = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
@@ -119,7 +119,7 @@ public class RocketScienceAllocator(IGameApiClient gameApiClient, IRocketScience
 
             using var client = httpClientFactory.Create(apiKey.Value);
 
-            var allocation = await client.GetAsync(getAllocationUrl);
+            using var allocation = await client.GetAsync(getAllocationUrl);
 
             var responseContent = await allocation.Content.ReadAsStringAsync();
             if (!allocation.IsSuccessStatusCode)

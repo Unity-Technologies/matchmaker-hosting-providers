@@ -102,7 +102,7 @@ public class EdgegapAllocator(IGameApiClient gameApiClient, IEdgegapHttpClientFa
 			};
 
 			var content = new StringContent(JsonConvert.SerializeObject(deploymentRequest), Encoding.UTF8, "application/json");
-			HttpResponseMessage response = await client.PostAsync($"{EdgegapApiUrl}/v2/deployments", content);
+			using HttpResponseMessage response = await client.PostAsync($"{EdgegapApiUrl}/v2/deployments", content);
 
 			string responseContent = await response.Content.ReadAsStringAsync();
 			if (!response.IsSuccessStatusCode)
