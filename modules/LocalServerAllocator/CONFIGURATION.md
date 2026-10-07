@@ -415,7 +415,7 @@ its own authentication profile before signing in.
 ## Verification
 
 This flow was verified end to end on Unity 6000.7, with `com.unity.services.multiplayer` 2.3.0 and Netcode for
-GameObjects 2.13.1, and with this module built against Cloud Code Apis 0.0.26. The test used a server and a client
+GameObjects 2.13.1, and with this module built against Cloud Code Apis 0.0.24. The test used a server and a client
 on the same Windows machine, and ran two consecutive matches on one server over a direct connection, then two over
 Relay. Every match was allocated, the server created the match session, and the client joined it and connected.
 

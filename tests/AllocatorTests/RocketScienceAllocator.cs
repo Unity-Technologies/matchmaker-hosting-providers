@@ -47,7 +47,7 @@ public class RocketScienceAllocatorTests
             });
 
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new())));
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new())));
 
         Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Created));
         Assert.That(allocation.Message, Is.Null);
@@ -71,7 +71,7 @@ public class RocketScienceAllocatorTests
             });
         
         var allocation = await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new
             Dictionary<string, object>{
                 {"Region", ""},
             })));
@@ -136,7 +136,7 @@ public class RocketScienceAllocatorTests
             });
 
         await _allocator.Allocate(_executionContextMock.Object, new AllocateRequest("1234",
-            new MatchmakingResults(null, "poolId", "poolName", "queueName", new())));
+            new MatchmakingResults(null, "matchId", "poolId", "poolName", "queueName", new())));
 
         Assert.That(capturedRequest, Is.Not.Null);
         Assert.That(capturedRequest!.RequestUri!.ToString(), Does.Contain($"/projects/{contextProjectId}/"));

@@ -87,7 +87,7 @@ public class GameyeAllocatorTests
 		string matchId = "match-1234",
 		string poolName = "poolName",
 		Dictionary<string, object>? matchProperties = null) =>
-		new(matchId, new MatchmakingResults(null, "poolId", poolName, "queueName",
+		new(matchId, new MatchmakingResults(null, "matchId", "poolId", poolName, "queueName",
 			matchProperties ?? new Dictionary<string, object>()));
 
 	// ── Basic allocation ──────────────────────────────────────────────

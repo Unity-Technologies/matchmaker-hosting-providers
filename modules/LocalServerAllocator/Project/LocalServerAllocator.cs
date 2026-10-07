@@ -74,7 +74,7 @@ public class LocalServerAllocator(IGameApiClient gameApiClient, ILogger<LocalSer
             {
                 await gameApiClient.Lobby.JoinLobbyByIdAsync(context, context.ServiceToken, controlSessionId,
                     impersonatedUserId: AllocatorPlayerId,
-                    joinByIdRequest: new JoinByIdRequest(player: new Player(id: AllocatorPlayerId, data: playerData)));
+                    player: new Player(id: AllocatorPlayerId, data: playerData));
             }
             catch (ApiException e) when (e.Response?.StatusCode == HttpStatusCode.Conflict)
             {

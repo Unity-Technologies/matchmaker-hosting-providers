@@ -71,9 +71,9 @@ public class LocalServerAllocatorTests
         var allocation = await _allocator.Allocate(_executionContextMock.Object, AllocateRequestFor(PlayersOnDevA));
 
         _lobbyApiMock.Verify(l => l.JoinLobbyByIdAsync(_executionContextMock.Object, ServiceToken, ControlSessionId,
-            It.IsAny<string>(), LocalServerAllocator.AllocatorPlayerId, It.IsAny<string>(),
-            It.Is<JoinByIdRequest>(request => request.Player.Id == LocalServerAllocator.AllocatorPlayerId &&
-                CarriesPendingMatchId(request.Player.Data)),
+            It.IsAny<string>(), LocalServerAllocator.AllocatorPlayerId,
+            It.Is<Player>(player => player.Id == LocalServerAllocator.AllocatorPlayerId &&
+                CarriesPendingMatchId(player.Data)),
             It.IsAny<CancellationToken>()), Times.Once);
         using (Assert.EnterMultipleScope())
         {
@@ -87,7 +87,7 @@ public class LocalServerAllocatorTests
     {
         SetupJoin().ThrowsAsync(ApiExceptionWith(HttpStatusCode.Conflict));
         _lobbyApiMock.Setup(l => l.UpdatePlayerAsync(It.IsAny<IExecutionContext>(), It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<PlayerUpdateRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ApiResponse<Lobby>());
 
@@ -95,7 +95,7 @@ public class LocalServerAllocatorTests
 
         _lobbyApiMock.Verify(l => l.UpdatePlayerAsync(_executionContextMock.Object, ServiceToken, ControlSessionId,
             LocalServerAllocator.AllocatorPlayerId, It.IsAny<string>(), LocalServerAllocator.AllocatorPlayerId,
-            It.IsAny<string>(), It.Is<PlayerUpdateRequest>(request => CarriesPendingMatchId(request.Data)),
+            It.Is<PlayerUpdateRequest>(request => CarriesPendingMatchId(request.Data)),
             It.IsAny<CancellationToken>()), Times.Once);
         Assert.That(allocation.Status, Is.EqualTo(AllocateStatus.Created));
     }
@@ -221,7 +221,7 @@ public class LocalServerAllocatorTests
 
     Moq.Language.Flow.ISetup<ILobbyApi, Task<ApiResponse<Lobby>>> SetupJoin() =>
         _lobbyApiMock.Setup(l => l.JoinLobbyByIdAsync(It.IsAny<IExecutionContext>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<JoinByIdRequest>(),
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Player>(),
             It.IsAny<CancellationToken>()));
 
     Moq.Language.Flow.ISetup<ILobbyApi, Task<ApiResponse<Lobby>>> SetupGetLobby() =>
@@ -235,7 +235,7 @@ public class LocalServerAllocatorTests
         pendingMatchId.Visibility == PlayerDataObject.VisibilityEnum.Member;
 
     static AllocateRequest AllocateRequestFor(string matchProperties) =>
-        new(MatchId, new MatchmakingResults(null, "poolId", "poolName", "queueName",
+        new(MatchId, new MatchmakingResults(null, MatchId, "poolId", "poolName", "queueName",
             JsonSerializer.Deserialize<Dictionary<string, object>>(matchProperties)!));
 
     static PollRequest PollRequestForMatch() =>
