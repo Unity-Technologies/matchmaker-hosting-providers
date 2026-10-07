@@ -12,7 +12,6 @@ jobs:
         module:
           [
             "GameLiftAllocator",
-            "MultiplayAllocator",
             "PlayFabAllocator",
             "AgonesAllocator",
           ]

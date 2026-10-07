@@ -12,7 +12,6 @@ assignees: ''
 ## Provider Integration
 <!-- Which provider integration is your question about? -->
 - [ ] GameLift
-- [ ] Multiplay
 - [ ] Multiplay by Rocket Science
 - [ ] PlayFab
 - [ ] General

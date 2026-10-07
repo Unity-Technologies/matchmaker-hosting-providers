@@ -15,7 +15,6 @@
 ## Provider Integration
 <!-- Which provider integration does this affect? -->
 - [ ] GameLift
-- [ ] Multiplay
 - [ ] PlayFab
 - [ ] New Provider Integration
 - [ ] General/Infrastructure
