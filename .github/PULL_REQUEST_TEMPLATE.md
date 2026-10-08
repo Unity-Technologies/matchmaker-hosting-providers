@@ -15,7 +15,7 @@
 ## Provider Integration
 <!-- Which provider integration does this affect? -->
 - [ ] GameLift
-- [ ] Multiplay
+- [ ] Multiplay by Rocket Science
 - [ ] PlayFab
 - [ ] New Provider Integration
 - [ ] General/Infrastructure
