@@ -14,6 +14,9 @@ jobs:
             "GameLiftAllocator",
             "PlayFabAllocator",
             "AgonesAllocator",
+            "EdgegapAllocator",
+            "GameyeAllocator",
+            "RocketScienceAllocator",
             "LocalServerAllocator",
           ]
     steps:
