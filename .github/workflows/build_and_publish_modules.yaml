@@ -18,6 +18,7 @@ jobs:
             "EdgegapAllocator",
             "GameyeAllocator",
             "RocketScienceAllocator",
+            "LocalServerAllocator",
           ]
     steps:
       - uses: actions/checkout@v5

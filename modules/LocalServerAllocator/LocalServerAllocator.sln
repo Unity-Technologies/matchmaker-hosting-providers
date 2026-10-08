@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Project", "Project", "{452B995D-FBE0-4DE7-A305-BD81800067FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalServerAllocator", "Project\LocalServerAllocator.csproj", "{28F4C349-D2E3-415A-B897-54F849169D7E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{28F4C349-D2E3-415A-B897-54F849169D7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28F4C349-D2E3-415A-B897-54F849169D7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28F4C349-D2E3-415A-B897-54F849169D7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28F4C349-D2E3-415A-B897-54F849169D7E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{28F4C349-D2E3-415A-B897-54F849169D7E} = {452B995D-FBE0-4DE7-A305-BD81800067FD}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E67CD6D2-359C-420D-B448-C630CDB83AB7}
+	EndGlobalSection
+EndGlobal

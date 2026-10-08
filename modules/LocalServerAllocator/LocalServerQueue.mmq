@@ -1,0 +1,51 @@
+{
+  "$schema": "https://ugs-config-schemas.unity3d.com/v1/matchmaker/matchmaker-queue.schema.json",
+  "name": "local-server",
+  "enabled": true,
+  "maxPlayersPerTicket": 1,
+  "defaultPool": {
+    "variants": [],
+    "name": "default",
+    "enabled": true,
+    "timeoutSeconds": 90,
+    "matchLogic": {
+      "matchDefinition": {
+        "teams": [
+          {
+            "name": "Players",
+            "teamCount": {
+              "min": 1,
+              "max": 1,
+              "relaxations": []
+            },
+            "playerCount": {
+              "min": 1,
+              "max": 1,
+              "relaxations": []
+            },
+            "teamRules": []
+          }
+        ],
+        "matchRules": [
+          {
+            "source": "Players.CustomData.localServerId",
+            "name": "SameServer",
+            "type": "Equality",
+            "enableRule": true,
+            "not": false,
+            "relaxations": []
+          }
+        ]
+      },
+      "name": "Rules",
+      "backfillEnabled": false
+    },
+    "matchHosting": {
+      "type": "CloudCode",
+      "moduleName": "LocalServerAllocator",
+      "allocateFunctionName": "Matchmaker_AllocateServer",
+      "pollFunctionName": "Matchmaker_PollAllocation"
+    }
+  },
+  "filteredPools": []
+}
